@@ -14,8 +14,52 @@ import Dashboard from "./pages/Dashboard";
 import Diet from "./pages/Diet";
 import Exercise from "./pages/Exercise";
 import NotFound from "./pages/NotFound";
+import GDPRConsent from "./pages/GDPRConsent";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const queryClient = new QueryClient();
+
+const ConsentGuard = ({ children }: { children: React.ReactNode }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [hasConsent, setHasConsent] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkConsent = () => {
+      try {
+        const consent = localStorage.getItem('gdpr-consent');
+        if (consent) {
+          const consentData = JSON.parse(consent);
+          setHasConsent(consentData.accepted === true);
+        } else {
+          setHasConsent(false);
+        }
+      } catch (error) {
+        console.error('Error checking consent:', error);
+        setHasConsent(false);
+      }
+    };
+
+    checkConsent();
+  }, []);
+
+  useEffect(() => {
+    if (hasConsent === false && location.pathname !== '/gdpr-consent') {
+      navigate('/gdpr-consent');
+    }
+  }, [hasConsent, location.pathname, navigate]);
+
+  if (hasConsent === null) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-pulse text-primary">Loading...</div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -26,17 +70,20 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Splash />} />
-                <Route path="/voice-setup" element={<VoiceNavigationTimer />} />
-                <Route path="/accessibility" element={<AccessibilitySelection />} />
-                <Route path="/onboarding" element={<Onboarding />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/diet" element={<Diet />} />
-                <Route path="/exercise" element={<Exercise />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <ConsentGuard>
+                <Routes>
+                  <Route path="/gdpr-consent" element={<GDPRConsent />} />
+                  <Route path="/" element={<Splash />} />
+                  <Route path="/voice-setup" element={<VoiceNavigationTimer />} />
+                  <Route path="/accessibility" element={<AccessibilitySelection />} />
+                  <Route path="/onboarding" element={<Onboarding />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/diet" element={<Diet />} />
+                  <Route path="/exercise" element={<Exercise />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </ConsentGuard>
             </BrowserRouter>
           </TooltipProvider>
         </UserProvider>
