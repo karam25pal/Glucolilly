@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FileText, Download, TrendingUp, Calendar } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
+import jsPDF from "jspdf";
 
 type ReportPeriod = "weekly" | "monthly" | "quarterly";
 
@@ -16,40 +17,114 @@ export const DiabetesReportGenerator = () => {
   const generateReport = () => {
     setIsGenerating(true);
     
-    // Simulate report generation
     setTimeout(() => {
-      const reportData = {
-        reportType: "Diabetes Management Report",
-        period: reportPeriod,
-        generatedDate: new Date().toISOString(),
-        patientInfo: {
-          name: profile?.name || "Patient",
-          diabetesType: profile?.diabetesType || "Type 2",
-          bmi: profile?.bmi,
-        },
-        metrics: {
-          weeklyStats,
-          glucoseReadings: metrics.filter(m => m.type === "glucose"),
-          meals: metrics.filter(m => m.type === "meal"),
-          exercise: metrics.filter(m => m.type === "exercise"),
-          steps: metrics.filter(m => m.type === "steps"),
-        },
-        summary: {
-          avgGlucose: weeklyStats.avgGlucose,
-          improvement: weeklyStats.improvement,
-          totalSteps: weeklyStats.totalSteps,
-          exerciseSessions: weeklyStats.exerciseSessions,
-        },
-      };
+      const pdf = new jsPDF();
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      let yPos = 20;
 
-      // Create and download report
-      const dataStr = JSON.stringify(reportData, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(dataBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `diabetes-report-${reportPeriod}-${new Date().toISOString().split('T')[0]}.json`;
-      link.click();
+      // Header
+      pdf.setFontSize(22);
+      pdf.setTextColor(214, 40, 40);
+      pdf.text("Professional Diabetes Report", pageWidth / 2, yPos, { align: "center" });
+      
+      yPos += 10;
+      pdf.setFontSize(10);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(`Generated: ${new Date().toLocaleDateString()}`, pageWidth / 2, yPos, { align: "center" });
+      
+      // Patient Information
+      yPos += 15;
+      pdf.setFontSize(14);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text("Patient Information", 20, yPos);
+      
+      yPos += 8;
+      pdf.setFontSize(10);
+      pdf.text(`Name: ${profile?.name || "Patient"}`, 20, yPos);
+      yPos += 6;
+      pdf.text(`Diabetes Type: ${profile?.diabetesType || "Type 2"}`, 20, yPos);
+      yPos += 6;
+      pdf.text(`BMI: ${profile?.bmi || "N/A"}`, 20, yPos);
+      yPos += 6;
+      pdf.text(`Report Period: ${reportPeriod.charAt(0).toUpperCase() + reportPeriod.slice(1)}`, 20, yPos);
+
+      // Summary Statistics
+      yPos += 15;
+      pdf.setFontSize(14);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text("Summary Statistics", 20, yPos);
+      
+      yPos += 8;
+      pdf.setFontSize(10);
+      pdf.text(`Average Glucose: ${weeklyStats.avgGlucose} mg/dL`, 20, yPos);
+      yPos += 6;
+      pdf.text(`Improvement: ${weeklyStats.improvement > 0 ? '+' : ''}${weeklyStats.improvement}%`, 20, yPos);
+      yPos += 6;
+      pdf.text(`Total Steps: ${weeklyStats.totalSteps.toLocaleString()}`, 20, yPos);
+      yPos += 6;
+      pdf.text(`Exercise Sessions: ${weeklyStats.exerciseSessions}`, 20, yPos);
+
+      // Glucose Readings
+      const glucoseReadings = metrics.filter(m => m.type === "glucose").slice(0, 10);
+      if (glucoseReadings.length > 0) {
+        yPos += 15;
+        pdf.setFontSize(14);
+        pdf.text("Recent Glucose Readings", 20, yPos);
+        
+        yPos += 8;
+        pdf.setFontSize(9);
+        glucoseReadings.forEach((reading, idx) => {
+          if (yPos > 270) {
+            pdf.addPage();
+            yPos = 20;
+          }
+          const date = new Date(reading.timestamp).toLocaleDateString();
+          const time = new Date(reading.timestamp).toLocaleTimeString();
+          pdf.text(`${idx + 1}. ${date} ${time}: ${Math.round(reading.value)} mg/dL`, 25, yPos);
+          yPos += 5;
+        });
+      }
+
+      // Recent Meals
+      const meals = metrics.filter(m => m.type === "meal").slice(0, 5);
+      if (meals.length > 0) {
+        yPos += 10;
+        if (yPos > 250) {
+          pdf.addPage();
+          yPos = 20;
+        }
+        pdf.setFontSize(14);
+        pdf.text("Recent Meals", 20, yPos);
+        
+        yPos += 8;
+        pdf.setFontSize(9);
+        meals.forEach((meal, idx) => {
+          if (yPos > 270) {
+            pdf.addPage();
+            yPos = 20;
+          }
+          const date = new Date(meal.timestamp).toLocaleDateString();
+          pdf.text(`${idx + 1}. ${date}: ${meal.mealDetails?.name || "Meal"}`, 25, yPos);
+          yPos += 5;
+          if (meal.mealDetails?.carbs) {
+            pdf.text(`   Carbs: ${meal.mealDetails.carbs}g, Calories: ${meal.mealDetails.calories || 0}`, 25, yPos);
+            yPos += 5;
+          }
+        });
+      }
+
+      // Footer
+      const totalPages = pdf.internal.pages.length - 1;
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(150, 150, 150);
+        pdf.text(`Page ${i} of ${totalPages}`, pageWidth / 2, 285, { align: "center" });
+        pdf.text("GlucoLilly - Professional Diabetes Management", pageWidth / 2, 290, { align: "center" });
+      }
+
+      // Save PDF
+      pdf.save(`diabetes-report-${reportPeriod}-${new Date().toISOString().split('T')[0]}.pdf`);
       
       setIsGenerating(false);
       toast.success(`${reportPeriod.charAt(0).toUpperCase() + reportPeriod.slice(1)} report generated successfully`);
