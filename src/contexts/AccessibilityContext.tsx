@@ -6,6 +6,14 @@ interface AccessibilityContextType {
   modes: AccessibilityMode[];
   setModes: (modes: AccessibilityMode[]) => void;
   hasMode: (mode: AccessibilityMode) => boolean;
+  highContrast: boolean;
+  setHighContrast: (value: boolean) => void;
+  voiceControl: boolean;
+  setVoiceControl: (value: boolean) => void;
+  screenReader: boolean;
+  setScreenReader: (value: boolean) => void;
+  fontSize: number;
+  setFontSize: (value: number) => void;
 }
 
 const AccessibilityContext = createContext<AccessibilityContextType | undefined>(undefined);
@@ -14,6 +22,26 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
   const [modes, setModesState] = useState<AccessibilityMode[]>(() => {
     const saved = localStorage.getItem('accessibility-modes');
     return saved ? JSON.parse(saved) : [];
+  });
+
+  const [highContrast, setHighContrast] = useState<boolean>(() => {
+    const saved = localStorage.getItem('high-contrast');
+    return saved ? JSON.parse(saved) : false;
+  });
+
+  const [voiceControl, setVoiceControl] = useState<boolean>(() => {
+    const saved = localStorage.getItem('voice-control');
+    return saved ? JSON.parse(saved) : false;
+  });
+
+  const [screenReader, setScreenReader] = useState<boolean>(() => {
+    const saved = localStorage.getItem('screen-reader');
+    return saved ? JSON.parse(saved) : false;
+  });
+
+  const [fontSize, setFontSize] = useState<number>(() => {
+    const saved = localStorage.getItem('font-size');
+    return saved ? parseFloat(saved) : 1;
   });
 
   useEffect(() => {
@@ -26,6 +54,28 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
     });
   }, [modes]);
 
+  useEffect(() => {
+    localStorage.setItem('high-contrast', JSON.stringify(highContrast));
+    if (highContrast) {
+      document.body.classList.add('high-contrast');
+    } else {
+      document.body.classList.remove('high-contrast');
+    }
+  }, [highContrast]);
+
+  useEffect(() => {
+    localStorage.setItem('voice-control', JSON.stringify(voiceControl));
+  }, [voiceControl]);
+
+  useEffect(() => {
+    localStorage.setItem('screen-reader', JSON.stringify(screenReader));
+  }, [screenReader]);
+
+  useEffect(() => {
+    localStorage.setItem('font-size', fontSize.toString());
+    document.documentElement.style.fontSize = `${fontSize}rem`;
+  }, [fontSize]);
+
   const setModes = (newModes: AccessibilityMode[]) => {
     setModesState(newModes);
   };
@@ -33,7 +83,19 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
   const hasMode = (mode: AccessibilityMode) => modes.includes(mode);
 
   return (
-    <AccessibilityContext.Provider value={{ modes, setModes, hasMode }}>
+    <AccessibilityContext.Provider value={{ 
+      modes, 
+      setModes, 
+      hasMode,
+      highContrast,
+      setHighContrast,
+      voiceControl,
+      setVoiceControl,
+      screenReader,
+      setScreenReader,
+      fontSize,
+      setFontSize,
+    }}>
       {children}
     </AccessibilityContext.Provider>
   );
