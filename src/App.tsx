@@ -33,7 +33,7 @@ const ConsentGuard = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const checkConsent = () => {
       try {
-        const consent = localStorage.getItem('gdpr-consent');
+        const consent = localStorage.getItem("gdpr-consent");
         if (consent) {
           const consentData = JSON.parse(consent);
           setHasConsent(consentData.accepted === true);
@@ -41,7 +41,7 @@ const ConsentGuard = ({ children }: { children: React.ReactNode }) => {
           setHasConsent(false);
         }
       } catch (error) {
-        console.error('Error checking consent:', error);
+        console.error("Error checking consent:", error);
         setHasConsent(false);
       }
     };
@@ -50,8 +50,8 @@ const ConsentGuard = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    if (hasConsent === false && location.pathname !== '/gdpr-consent' && location.pathname !== '/') {
-      navigate('/gdpr-consent');
+    if (hasConsent === false && location.pathname !== "/gdpr-consent" && location.pathname !== "/") {
+      navigate("/gdpr-consent");
     }
   }, [hasConsent, location.pathname, navigate]);
 
@@ -68,7 +68,7 @@ const ConsentGuard = ({ children }: { children: React.ReactNode }) => {
 
 const LayoutWithSidebar = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
-  const noSidebarRoutes = ['/', '/voice-setup', '/accessibility', '/onboarding', '/gdpr-consent'];
+  const noSidebarRoutes = ["/", "/voice-setup", "/accessibility", "/onboarding", "/gdpr-consent"];
   const showSidebar = !noSidebarRoutes.includes(location.pathname);
 
   if (!showSidebar) {
@@ -83,9 +83,7 @@ const LayoutWithSidebar = ({ children }: { children: React.ReactNode }) => {
           <header className="h-12 lg:h-16 flex items-center border-b px-phi-3 lg:px-phi-4 bg-background sticky top-0 z-10">
             <SidebarTrigger />
           </header>
-          <div className="w-full">
-            {children}
-          </div>
+          <div className="w-full">{children}</div>
         </main>
       </div>
     </SidebarProvider>
@@ -105,7 +103,7 @@ const App = () => (
                 <LayoutWithSidebar>
                   <Routes>
                     <Route path="/gdpr-consent" element={<GDPRConsent />} />
-                    <Route path="/" element={<Splash />} />
+                    <Route path="/" element={<Splash />} index />
                     <Route path="/voice-setup" element={<VoiceNavigationTimer />} />
                     <Route path="/accessibility" element={<AccessibilitySelection />} />
                     <Route path="/onboarding" element={<Onboarding />} />
