@@ -12,40 +12,39 @@ serve(async (req) => {
   }
 
   try {
-    const { imageBase64, diabetesType } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const { imageBase64, diabetesStats } = await req.json();
     
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
-    }
-
     if (!imageBase64) {
-      throw new Error("Image data is required");
+      return new Response(
+        JSON.stringify({ error: 'Image is required' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
     }
 
-    const systemPrompt = `You are a nutrition analysis AI for diabetes management. Analyze food images and provide:
-1. Meal name/description
-2. Estimated carbohydrates (grams)
-3. Estimated calories
-4. Estimated protein (grams)
-5. Glycemic load estimate (low/medium/high)
-6. Compatibility score for ${diabetesType || 'diabetes'} (0-1)
-7. Portion recommendations
-8. Healthier alternatives if needed
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY is not configured');
+    }
 
-Be practical, encouraging, and specific. Format your response as JSON:
-{
-  "mealName": "string",
-  "carbs": number,
-  "calories": number,
-  "protein": number,
-  "glycemicLoad": "low|medium|high",
-  "compatibilityScore": number,
-  "portions": "string advice",
-  "alternatives": ["string", "string"],
-  "notes": "string"
-}`;
+    // Prepare the prompt with diabetes context
+    const prompt = `Analyze this meal image for a person with ${diabetesStats?.diabetesType || 'Type 2'} diabetes.
+    
+Current health stats:
+- Average glucose: ${diabetesStats?.avgGlucose || 'N/A'} mg/dL
+- BMI: ${diabetesStats?.bmi || 'N/A'}
+- Recent improvement: ${diabetesStats?.improvement || '0'}%
 
+Please provide:
+1. Identify the foods in the image
+2. Estimate nutritional content (calories, carbs, protein, fiber)
+3. Assess diabetes suitability (rate 1-5, where 5 is most suitable)
+4. Specific recommendations for this person's diabetes management
+5. Suggest healthier alternatives if needed
+
+Keep the response concise and actionable.`;
+
+    console.log('Sending request to Lovable AI...');
+    
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -55,13 +54,12 @@ Be practical, encouraging, and specific. Format your response as JSON:
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: systemPrompt },
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: "Analyze this meal image for diabetes management"
+                text: prompt
               },
               {
                 type: "image_url",
@@ -72,67 +70,46 @@ Be practical, encouraging, and specific. Format your response as JSON:
             ]
           }
         ],
+        max_tokens: 1000,
       }),
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('AI API error:', response.status, errorText);
+      
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 429 }
         );
       }
+      
       if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: "AI credits exhausted. Please add credits to continue." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({ error: 'Payment required. Please add credits to your Lovable AI workspace.' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 402 }
         );
       }
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      throw new Error("AI gateway request failed");
+      
+      throw new Error(`AI API error: ${response.status}`);
     }
 
     const data = await response.json();
-    let analysis;
+    console.log('AI response received');
     
-    try {
-      const content = data.choices[0].message.content;
-      // Try to parse JSON from the response
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        analysis = JSON.parse(jsonMatch[0]);
-      } else {
-        // Fallback if not JSON
-        analysis = {
-          mealName: "Meal Analysis",
-          carbs: 0,
-          calories: 0,
-          protein: 0,
-          glycemicLoad: "medium",
-          compatibilityScore: 0.5,
-          portions: content,
-          alternatives: [],
-          notes: content
-        };
-      }
-    } catch (parseError) {
-      console.error("JSON parse error:", parseError);
-      analysis = {
-        mealName: "Analysis Result",
-        notes: data.choices[0].message.content
-      };
-    }
-    
+    const analysis = data.choices?.[0]?.message?.content || 'Unable to analyze the image';
+
     return new Response(
       JSON.stringify({ analysis }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+
   } catch (error) {
-    console.error("analyze-meal-image error:", error);
+    console.error('Error in analyze-meal-image:', error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
 });

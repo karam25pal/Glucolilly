@@ -7,6 +7,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { Moon, Sun } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { MealImageAnalyzer } from "@/components/MealImageAnalyzer";
 
 const Diet = () => {
   const navigate = useNavigate();
@@ -56,7 +57,14 @@ const Diet = () => {
 
       <main className="max-w-7xl mx-auto px-phi-4 py-phi-5">
         {!selectedRecipe ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-phi-4">
+          <>
+            {/* Meal Image Analyzer */}
+            <div className="mb-phi-5">
+              <MealImageAnalyzer />
+            </div>
+
+            {/* Recipe Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-phi-4">
             {recipes.map((recipe) => (
               <Card key={recipe.id} className="p-phi-4 hover:shadow-lg transition-shadow">
                 <div className="flex items-start justify-between mb-phi-3">
@@ -101,7 +109,8 @@ const Diet = () => {
                 </Button>
               </Card>
             ))}
-          </div>
+            </div>
+          </>
         ) : (
           <Card className="p-phi-5 max-w-3xl mx-auto">
             <div className="flex items-start justify-between mb-phi-4">
