@@ -71,21 +71,21 @@ const Diet = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border px-phi-4 py-phi-3">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-phi-3">
+      <header className="border-b border-border px-phi-3 sm:px-phi-4 py-phi-2 sm:py-phi-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-phi-2">
+          <div className="flex items-center gap-phi-2 sm:gap-phi-3 min-w-0 flex-1">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate('/dashboard')}
-              className="min-h-touch min-w-touch"
+              className="min-h-touch min-w-touch flex-shrink-0"
               aria-label="Back to dashboard"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-primary">Diet Suggestions</h1>
-              <p className="text-sm text-muted-foreground">Healthy recipes for diabetes management</p>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-lg sm:text-2xl font-bold text-primary truncate">Diet Suggestions</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground truncate hidden sm:block">Healthy recipes for diabetes management</p>
             </div>
           </div>
           
@@ -93,28 +93,28 @@ const Diet = () => {
             variant="outline"
             size="icon"
             onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-            className="min-h-touch min-w-touch"
+            className="min-h-touch min-w-touch flex-shrink-0"
             aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
           >
-            {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+            {theme === 'light' ? <Moon className="h-4 w-4 sm:h-5 sm:w-5" /> : <Sun className="h-4 w-4 sm:h-5 sm:w-5" />}
           </Button>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-phi-4 py-phi-5">
+      <main className="max-w-7xl mx-auto px-phi-3 sm:px-phi-4 py-phi-3 sm:py-phi-5">
         {!selectedRecipe ? (
           <>
             {/* Meal Image Analyzer */}
-            <div className="mb-phi-5">
+            <div className="mb-phi-3 sm:mb-phi-5">
               <MealImageAnalyzer />
             </div>
 
             {/* Recipe Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-phi-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-phi-3 sm:gap-phi-4">
             {recipes.map((recipe) => (
               <Card key={recipe.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                 {recipe.image && recipeImages[recipe.image] && (
-                  <div className="relative h-48 overflow-hidden">
+                  <div className="relative h-40 sm:h-48 overflow-hidden">
                     <img 
                       src={recipeImages[recipe.image]} 
                       alt={recipe.name}
@@ -128,41 +128,41 @@ const Diet = () => {
                         onClick={() => handlePlayAudio(recipe.name, false)}
                         aria-label={`Play audio for ${recipe.name}`}
                       >
-                        <Volume2 className="h-5 w-5 text-primary" />
+                        <Volume2 className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                       </Button>
                     </div>
                   </div>
                 )}
                 
-                <div className="p-phi-4">
-                  <div className="flex items-start justify-between mb-phi-3">
-                    <h3 className="text-xl font-bold text-foreground">{recipe.name}</h3>
+                <div className="p-phi-3 sm:p-phi-4">
+                  <div className="flex items-start justify-between mb-phi-2 sm:mb-phi-3">
+                    <h3 className="text-lg sm:text-xl font-bold text-foreground">{recipe.name}</h3>
                   </div>
 
-                <div className="flex flex-wrap gap-phi-2 mb-phi-3">
-                  <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
-                    <Clock className="h-4 w-4" />
+                <div className="flex flex-wrap gap-phi-2 mb-phi-2 sm:mb-phi-3">
+                  <span className="inline-flex items-center gap-1 text-xs sm:text-sm text-muted-foreground">
+                    <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
                     {recipe.prepTime}
                   </span>
-                  <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
-                    <Flame className="h-4 w-4" />
+                  <span className="inline-flex items-center gap-1 text-xs sm:text-sm text-muted-foreground">
+                    <Flame className="h-3 w-3 sm:h-4 sm:w-4" />
                     {recipe.calories} kcal
                   </span>
-                  <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
-                    <Wheat className="h-4 w-4" />
+                  <span className="inline-flex items-center gap-1 text-xs sm:text-sm text-muted-foreground">
+                    <Wheat className="h-3 w-3 sm:h-4 sm:w-4" />
                     {recipe.carbs}g carbs
                   </span>
                 </div>
 
-                <div className="mb-phi-3">
-                  <div className="flex justify-between text-sm mb-phi-1">
+                <div className="mb-phi-2 sm:mb-phi-3">
+                  <div className="flex justify-between text-xs sm:text-sm mb-phi-1">
                     <span className="text-muted-foreground">Protein: {recipe.protein}g</span>
                     <span className="text-muted-foreground">Fiber: {recipe.fiber}g</span>
                   </div>
                 </div>
 
                 <Button
-                  className="w-full min-h-touch"
+                  className="w-full min-h-touch text-sm sm:text-base"
                   onClick={() => setSelectedRecipe(recipe.id)}
                 >
                   View Recipe
@@ -173,9 +173,9 @@ const Diet = () => {
             </div>
           </>
         ) : (
-          <Card className="p-phi-5 max-w-3xl mx-auto">
+          <Card className="p-phi-3 sm:p-phi-5 max-w-3xl mx-auto">
             {recipe!.image && recipeImages[recipe!.image] && (
-              <div className="relative h-64 overflow-hidden rounded-lg mb-phi-4">
+              <div className="relative h-48 sm:h-64 lg:h-80 overflow-hidden rounded-lg mb-phi-3 sm:mb-phi-4">
                 <img 
                   src={recipeImages[recipe!.image]} 
                   alt={recipe!.name}
@@ -184,54 +184,54 @@ const Diet = () => {
               </div>
             )}
             
-            <div className="flex items-start justify-between mb-phi-4">
-              <h2 className="text-3xl font-bold text-primary">{recipe!.name}</h2>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-phi-2 sm:gap-phi-3 mb-phi-3 sm:mb-phi-4">
+              <h2 className="text-2xl sm:text-3xl font-bold text-primary">{recipe!.name}</h2>
               <Button
                 variant="outline"
                 size="icon"
-                className="min-h-touch min-w-touch"
+                className="min-h-touch min-w-touch flex-shrink-0"
                 onClick={() => handlePlayAudio(recipe!.name, true)}
                 aria-label={`Play full audio guide for ${recipe!.name}`}
               >
-                <Volume2 className="h-5 w-5" />
+                <Volume2 className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
             </div>
 
-            <div className="grid grid-cols-3 gap-phi-3 mb-phi-5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-phi-2 sm:gap-phi-3 mb-phi-4 sm:mb-phi-5">
               <div className="text-center">
-                <p className="text-2xl font-bold text-foreground">{recipe!.calories}</p>
-                <p className="text-sm text-muted-foreground">Calories</p>
+                <p className="text-xl sm:text-2xl font-bold text-foreground">{recipe!.calories}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Calories</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-foreground">{recipe!.carbs}g</p>
-                <p className="text-sm text-muted-foreground">Carbs</p>
+                <p className="text-xl sm:text-2xl font-bold text-foreground">{recipe!.carbs}g</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Carbs</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-foreground">{recipe!.protein}g</p>
-                <p className="text-sm text-muted-foreground">Protein</p>
+                <p className="text-xl sm:text-2xl font-bold text-foreground">{recipe!.protein}g</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Protein</p>
               </div>
             </div>
 
-            <div className="space-y-phi-4">
+            <div className="space-y-phi-3 sm:space-y-phi-4">
               <div>
-                <h3 className="text-xl font-bold text-foreground mb-phi-2">Ingredients</h3>
+                <h3 className="text-lg sm:text-xl font-bold text-foreground mb-phi-2">Ingredients</h3>
                 <ul className="space-y-phi-1">
                   {recipe!.ingredients.map((ingredient, idx) => (
                     <li key={idx} className="flex items-start gap-phi-2">
-                      <span className="text-primary mt-1">•</span>
-                      <span className="text-foreground">{ingredient}</span>
+                      <span className="text-primary mt-1 flex-shrink-0">•</span>
+                      <span className="text-sm sm:text-base text-foreground">{ingredient}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
               <div>
-                <h3 className="text-xl font-bold text-foreground mb-phi-2">Instructions</h3>
+                <h3 className="text-lg sm:text-xl font-bold text-foreground mb-phi-2">Instructions</h3>
                 <ol className="space-y-phi-2">
                   {recipe!.instructions.map((instruction, idx) => (
-                    <li key={idx} className="flex gap-phi-3">
-                      <span className="font-bold text-primary">{idx + 1}.</span>
-                      <span className="text-foreground">{instruction}</span>
+                    <li key={idx} className="flex gap-phi-2 sm:gap-phi-3">
+                      <span className="font-bold text-primary flex-shrink-0">{idx + 1}.</span>
+                      <span className="text-sm sm:text-base text-foreground">{instruction}</span>
                     </li>
                   ))}
                 </ol>
@@ -240,7 +240,7 @@ const Diet = () => {
 
             <Button
               variant="outline"
-              className="w-full mt-phi-5 min-h-touch"
+              className="w-full mt-phi-4 sm:mt-phi-5 min-h-touch text-sm sm:text-base"
               onClick={() => setSelectedRecipe(null)}
             >
               Back to Recipes

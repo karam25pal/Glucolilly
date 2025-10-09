@@ -35,21 +35,21 @@ const GDPRConsent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-phi-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-phi-3 sm:p-phi-4">
       <Card className="w-full max-w-3xl">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-phi-3">
-            <div className="p-phi-3 bg-primary/10 rounded-full">
-              <Shield className="h-12 w-12 text-primary" />
+        <CardHeader className="text-center p-phi-4 sm:p-phi-6">
+          <div className="flex justify-center mb-phi-2 sm:mb-phi-3">
+            <div className="p-phi-2 sm:p-phi-3 bg-primary/10 rounded-full">
+              <Shield className="h-10 w-10 sm:h-12 sm:w-12 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl sm:text-3xl">Privacy & Data Protection</CardTitle>
-          <CardDescription className="text-base">
+          <CardTitle className="text-xl sm:text-2xl lg:text-3xl">Privacy & Data Protection</CardTitle>
+          <CardDescription className="text-sm sm:text-base">
             GDPR Compliance Notice - United Kingdom
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-phi-4">
+        <CardContent className="space-y-phi-3 sm:space-y-phi-4 p-phi-4 sm:p-phi-6">
           <div className="bg-muted/30 p-phi-4 rounded-lg">
             <h3 className="font-semibold text-foreground mb-phi-2 flex items-center gap-phi-2">
               <CheckCircle2 className="h-5 w-5 text-primary" />
@@ -195,11 +195,11 @@ const GDPRConsent = () => {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-phi-3">
+          <div className="flex flex-col sm:flex-row gap-phi-2 sm:gap-phi-3">
             <Button
               variant="outline"
               onClick={handleDecline}
-              className="flex-1 min-h-touch"
+              className="flex-1 min-h-touch text-sm sm:text-base"
             >
               <XCircle className="h-4 w-4 mr-phi-2" />
               Decline
@@ -207,14 +207,14 @@ const GDPRConsent = () => {
             <Button
               onClick={handleAccept}
               disabled={!agreedToTerms}
-              className="flex-1 min-h-touch"
+              className="flex-1 min-h-touch text-sm sm:text-base"
             >
               <CheckCircle2 className="h-4 w-4 mr-phi-2" />
               Accept & Continue
             </Button>
           </div>
 
-          <p className="text-xs text-center text-muted-foreground">
+          <p className="text-xs sm:text-sm text-center text-muted-foreground">
             By accepting, you acknowledge that you have read and agree to our data protection practices
           </p>
         </CardContent>

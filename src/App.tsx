@@ -77,13 +77,13 @@ const LayoutWithSidebar = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div className="min-h-screen flex w-full flex-col lg:flex-row">
         <AppSidebar />
-        <main className="flex-1">
-          <header className="h-12 flex items-center border-b px-phi-4">
+        <main className="flex-1 w-full">
+          <header className="h-12 lg:h-16 flex items-center border-b px-phi-3 lg:px-phi-4 bg-background sticky top-0 z-10">
             <SidebarTrigger />
           </header>
-          <div className="flex-1">
+          <div className="w-full">
             {children}
           </div>
         </main>

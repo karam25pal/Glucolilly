@@ -68,16 +68,16 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border px-phi-4 py-phi-3">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-primary">GlucoLilly</h1>
-            <p className="text-sm text-muted-foreground">
+      <header className="border-b border-border px-phi-3 sm:px-phi-4 py-phi-2 sm:py-phi-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-phi-2">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-primary truncate">GlucoLilly</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">
               Welcome back, {profile?.name || "User"}
             </p>
           </div>
           
-          <div className="flex gap-phi-2">
+          <div className="flex gap-phi-2 flex-shrink-0">
             <Button
               variant="outline"
               size="icon"
@@ -85,7 +85,7 @@ const Dashboard = () => {
               className="min-h-touch min-w-touch"
               aria-label="Export weekly report"
             >
-              <Download className="h-5 w-5" />
+              <Download className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
             <Button
               variant="outline"
@@ -94,45 +94,45 @@ const Dashboard = () => {
               className="min-h-touch min-w-touch"
               aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
             >
-              {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+              {theme === 'light' ? <Moon className="h-4 w-4 sm:h-5 sm:w-5" /> : <Sun className="h-4 w-4 sm:h-5 sm:w-5" />}
             </Button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-phi-4 py-phi-5">
+      <main className="max-w-7xl mx-auto px-phi-3 sm:px-phi-4 py-phi-3 sm:py-phi-5">
         {/* Weekly Progress */}
-        <section className="mb-phi-5">
-          <Card className="p-phi-5 bg-gradient-to-br from-primary/5 to-accent">
-            <div className="flex items-center gap-phi-3 mb-phi-3">
-              <TrendingUp className="h-8 w-8 text-primary" />
-              <div>
-                <h2 className="text-2xl font-bold text-primary">Weekly Progress</h2>
-                <p className="text-muted-foreground">Your improvement this week</p>
+        <section className="mb-phi-3 sm:mb-phi-5">
+          <Card className="p-phi-3 sm:p-phi-5 bg-gradient-to-br from-primary/5 to-accent">
+            <div className="flex items-center gap-phi-2 sm:gap-phi-3 mb-phi-2 sm:mb-phi-3">
+              <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-primary flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <h2 className="text-lg sm:text-2xl font-bold text-primary truncate">Weekly Progress</h2>
+                <p className="text-xs sm:text-sm text-muted-foreground">Your improvement this week</p>
               </div>
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-phi-4">
-              <div className="bg-background/80 backdrop-blur p-phi-3 rounded-lg">
-                <p className="text-sm text-muted-foreground mb-phi-1">Avg Glucose</p>
-                <p className="text-2xl font-bold text-foreground">{weeklyStats.avgGlucose} mg/dL</p>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-phi-3 sm:gap-phi-4">
+              <div className="bg-background/80 backdrop-blur p-phi-2 sm:p-phi-3 rounded-lg">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-phi-1">Avg Glucose</p>
+                <p className="text-lg sm:text-2xl font-bold text-foreground">{weeklyStats.avgGlucose} <span className="text-xs sm:text-sm">mg/dL</span></p>
               </div>
-              <div className="bg-background/80 backdrop-blur p-phi-3 rounded-lg">
-                <p className="text-sm text-muted-foreground mb-phi-1">Improvement</p>
-                <p className="text-2xl font-bold text-primary">
+              <div className="bg-background/80 backdrop-blur p-phi-2 sm:p-phi-3 rounded-lg">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-phi-1">Improvement</p>
+                <p className="text-lg sm:text-2xl font-bold text-primary">
                   {weeklyStats.improvement > 0 ? '+' : ''}{weeklyStats.improvement}%
                 </p>
               </div>
-              <div className="bg-background/80 backdrop-blur p-phi-3 rounded-lg">
-                <p className="text-sm text-muted-foreground mb-phi-1">Total Steps</p>
-                <p className="text-2xl font-bold text-foreground">
+              <div className="bg-background/80 backdrop-blur p-phi-2 sm:p-phi-3 rounded-lg">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-phi-1">Total Steps</p>
+                <p className="text-lg sm:text-2xl font-bold text-foreground">
                   {weeklyStats.totalSteps.toLocaleString()}
                 </p>
               </div>
-              <div className="bg-background/80 backdrop-blur p-phi-3 rounded-lg">
-                <p className="text-sm text-muted-foreground mb-phi-1">Workouts</p>
-                <p className="text-2xl font-bold text-foreground">{weeklyStats.exerciseSessions}</p>
+              <div className="bg-background/80 backdrop-blur p-phi-2 sm:p-phi-3 rounded-lg">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-phi-1">Workouts</p>
+                <p className="text-lg sm:text-2xl font-bold text-foreground">{weeklyStats.exerciseSessions}</p>
               </div>
             </div>
           </Card>
@@ -144,45 +144,45 @@ const Dashboard = () => {
         </section>
 
         {/* Quick Stats */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-phi-4 mb-phi-5">
-          <Card className="p-phi-4">
-            <div className="flex items-center gap-phi-3 mb-phi-2">
-              <div className="p-phi-2 bg-primary/10 rounded-lg">
-                <Activity className="h-6 w-6 text-primary" aria-hidden="true" />
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-phi-3 sm:gap-phi-4 mb-phi-3 sm:mb-phi-5">
+          <Card className="p-phi-3 sm:p-phi-4">
+            <div className="flex items-center gap-phi-2 sm:gap-phi-3 mb-phi-2">
+              <div className="p-phi-2 bg-primary/10 rounded-lg flex-shrink-0">
+                <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-primary" aria-hidden="true" />
               </div>
-              <h2 className="text-lg font-semibold">Latest Glucose</h2>
+              <h2 className="text-sm sm:text-lg font-semibold truncate">Latest Glucose</h2>
             </div>
-            <p className="text-3xl font-bold text-foreground mb-phi-1">
-              {latestGlucose ? Math.round(latestGlucose.value) : '--'} mg/dL
+            <p className="text-2xl sm:text-3xl font-bold text-foreground mb-phi-1">
+              {latestGlucose ? Math.round(latestGlucose.value) : '--'} <span className="text-sm sm:text-base">mg/dL</span>
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">
               {latestGlucose ? new Date(latestGlucose.timestamp).toLocaleTimeString() : 'No data'}
             </p>
           </Card>
 
-          <Card className="p-phi-4">
-            <div className="flex items-center gap-phi-3 mb-phi-2">
-              <div className="p-phi-2 bg-primary/10 rounded-lg">
-                <Utensils className="h-6 w-6 text-primary" aria-hidden="true" />
+          <Card className="p-phi-3 sm:p-phi-4">
+            <div className="flex items-center gap-phi-2 sm:gap-phi-3 mb-phi-2">
+              <div className="p-phi-2 bg-primary/10 rounded-lg flex-shrink-0">
+                <Utensils className="h-5 w-5 sm:h-6 sm:w-6 text-primary" aria-hidden="true" />
               </div>
-              <h2 className="text-lg font-semibold">Today's Meals</h2>
+              <h2 className="text-sm sm:text-lg font-semibold truncate">Today's Meals</h2>
             </div>
-            <p className="text-3xl font-bold text-foreground mb-phi-1">
+            <p className="text-2xl sm:text-3xl font-bold text-foreground mb-phi-1">
               {todayMeals.length}
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">
               {todayMeals.reduce((sum, m) => sum + (m.mealDetails?.calories || 0), 0)} total calories
             </p>
           </Card>
 
-          <Card className="p-phi-4">
-            <div className="flex items-center gap-phi-3 mb-phi-2">
-              <div className="p-phi-2 bg-primary/10 rounded-lg">
-                <Dumbbell className="h-6 w-6 text-primary" aria-hidden="true" />
+          <Card className="p-phi-3 sm:p-phi-4">
+            <div className="flex items-center gap-phi-2 sm:gap-phi-3 mb-phi-2">
+              <div className="p-phi-2 bg-primary/10 rounded-lg flex-shrink-0">
+                <Dumbbell className="h-5 w-5 sm:h-6 sm:w-6 text-primary" aria-hidden="true" />
               </div>
-              <h2 className="text-lg font-semibold">Today's Steps</h2>
+              <h2 className="text-sm sm:text-lg font-semibold truncate">Today's Steps</h2>
             </div>
-            <p className="text-3xl font-bold text-foreground mb-phi-1">
+            <p className="text-2xl sm:text-3xl font-bold text-foreground mb-phi-1">
               {todaySteps ? Math.round(todaySteps.value).toLocaleString() : '0'}
             </p>
             <div className="w-full bg-muted rounded-full h-2">
@@ -191,51 +191,36 @@ const Dashboard = () => {
                 style={{ width: `${Math.min((todaySteps?.value || 0) / 10000 * 100, 100)}%` }} 
               />
             </div>
-            <p className="text-sm text-muted-foreground mt-phi-1">Goal: 10,000 steps</p>
-          </Card>
-
-          <Card className="p-phi-4">
-            <div className="flex items-center gap-phi-3 mb-phi-2">
-              <div className="p-phi-2 bg-primary/10 rounded-lg">
-                <Activity className="h-6 w-6 text-primary" aria-hidden="true" />
-              </div>
-              <h2 className="text-lg font-semibold">BMI</h2>
-            </div>
-            <p className="text-3xl font-bold text-foreground mb-phi-1">
-              {profile?.bmi || '--'}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {profile?.bmi && profile.bmi < 25 ? 'Normal range' : 'Monitor closely'}
-            </p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-phi-1">Goal: 10,000 steps</p>
           </Card>
         </section>
 
         {/* Metrics Input */}
-        <section className="mb-phi-5">
+        <section className="mb-phi-3 sm:mb-phi-5">
           <MetricsInput />
         </section>
 
         {/* AI Insights */}
-        <section className="mb-phi-5">
-          <Card className="p-phi-5 bg-gradient-to-br from-primary/5 to-accent">
-            <h2 className="text-2xl font-bold text-primary mb-phi-3">
+        <section className="mb-phi-3 sm:mb-phi-5">
+          <Card className="p-phi-3 sm:p-phi-5 bg-gradient-to-br from-primary/5 to-accent">
+            <h2 className="text-lg sm:text-2xl font-bold text-primary mb-phi-2 sm:mb-phi-3">
               Today's AI Insights
             </h2>
-            <div className="space-y-phi-3">
-              <div className="bg-background/80 backdrop-blur p-phi-4 rounded-lg">
-                <h3 className="font-semibold text-foreground mb-phi-2">
+            <div className="space-y-phi-2 sm:space-y-phi-3">
+              <div className="bg-background/80 backdrop-blur p-phi-3 sm:p-phi-4 rounded-lg">
+                <h3 className="text-sm sm:text-base font-semibold text-foreground mb-phi-2">
                   ✨ Easy Win
                 </h3>
-                <p className="text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Try a 12-minute walk after lunch to help manage post-meal glucose levels
                 </p>
               </div>
               
-              <div className="bg-background/80 backdrop-blur p-phi-4 rounded-lg">
-                <h3 className="font-semibold text-foreground mb-phi-2">
+              <div className="bg-background/80 backdrop-blur p-phi-3 sm:p-phi-4 rounded-lg">
+                <h3 className="text-sm sm:text-base font-semibold text-foreground mb-phi-2">
                   🎯 Level Up
                 </h3>
-                <p className="text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Your glucose levels are {weeklyStats.improvement > 0 ? 'improving' : 'stable'}! 
                   Keep logging your meals and exercise for better tracking.
                 </p>
@@ -245,25 +230,25 @@ const Dashboard = () => {
         </section>
 
         {/* Quick Actions */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-phi-4">
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-phi-3 sm:gap-phi-4">
           <Card 
-            className="p-phi-5 hover:shadow-lg transition-shadow cursor-pointer"
+            className="p-phi-3 sm:p-phi-5 hover:shadow-lg transition-shadow cursor-pointer"
             onClick={() => navigate('/diet')}
           >
-            <Utensils className="h-8 w-8 text-primary mb-phi-3" />
-            <h3 className="text-xl font-bold mb-phi-2">Diet Suggestions</h3>
-            <p className="text-muted-foreground">
+            <Utensils className="h-6 w-6 sm:h-8 sm:w-8 text-primary mb-phi-2 sm:mb-phi-3" />
+            <h3 className="text-lg sm:text-xl font-bold mb-phi-1 sm:mb-phi-2">Diet Suggestions</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground">
               Explore healthy recipes with audio guides
             </p>
           </Card>
 
           <Card 
-            className="p-phi-5 hover:shadow-lg transition-shadow cursor-pointer"
+            className="p-phi-3 sm:p-phi-5 hover:shadow-lg transition-shadow cursor-pointer"
             onClick={() => navigate('/exercise')}
           >
-            <Dumbbell className="h-8 w-8 text-primary mb-phi-3" />
-            <h3 className="text-xl font-bold mb-phi-2">Exercise Guides</h3>
-            <p className="text-muted-foreground">
+            <Dumbbell className="h-6 w-6 sm:h-8 sm:w-8 text-primary mb-phi-2 sm:mb-phi-3" />
+            <h3 className="text-lg sm:text-xl font-bold mb-phi-1 sm:mb-phi-2">Exercise Guides</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground">
               View personalized workout plans with instructions
             </p>
           </Card>
@@ -273,11 +258,11 @@ const Dashboard = () => {
       {/* Floating AI Assistant */}
       <Button
         size="icon"
-        className="fixed bottom-phi-4 right-phi-4 h-16 w-16 rounded-full shadow-lg"
+        className="fixed bottom-phi-3 right-phi-3 sm:bottom-phi-4 sm:right-phi-4 h-12 w-12 sm:h-16 sm:w-16 rounded-full shadow-lg z-50"
         onClick={() => setShowAssistant(true)}
         aria-label="Open AI Assistant"
       >
-        <MessageCircle className="h-6 w-6" />
+        <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6" />
       </Button>
 
       {showAssistant && (

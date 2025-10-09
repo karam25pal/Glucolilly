@@ -45,22 +45,22 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-phi-4">
-      <div className="max-w-2xl mx-auto space-y-phi-4">
+    <div className="min-h-screen bg-background p-phi-3 sm:p-phi-4 lg:p-phi-5">
+      <div className="max-w-2xl mx-auto space-y-phi-3 sm:space-y-phi-4">
         <Card>
-          <CardHeader>
-            <div className="flex items-center gap-phi-3">
-              <div className="p-phi-3 bg-primary/10 rounded-full">
-                <SettingsIcon className="h-8 w-8 text-primary" />
+          <CardHeader className="p-phi-3 sm:p-phi-4 lg:p-phi-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-phi-3">
+              <div className="p-phi-2 sm:p-phi-3 bg-primary/10 rounded-full flex-shrink-0">
+                <SettingsIcon className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
               </div>
-              <div>
-                <CardTitle className="text-2xl">Settings</CardTitle>
-                <CardDescription>Manage your app preferences</CardDescription>
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-xl sm:text-2xl truncate">Settings</CardTitle>
+                <CardDescription className="text-sm sm:text-base">Manage your app preferences</CardDescription>
               </div>
             </div>
           </CardHeader>
 
-          <CardContent className="space-y-phi-5">
+          <CardContent className="space-y-phi-4 sm:space-y-phi-5 p-phi-3 sm:p-phi-4 lg:p-phi-6">
             {/* Notifications */}
             <div>
               <div className="flex items-center gap-phi-2 mb-phi-3">
