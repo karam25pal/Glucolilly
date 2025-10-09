@@ -50,7 +50,7 @@ const ConsentGuard = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    if (hasConsent === false && location.pathname !== '/gdpr-consent') {
+    if (hasConsent === false && location.pathname !== '/gdpr-consent' && location.pathname !== '/') {
       navigate('/gdpr-consent');
     }
   }, [hasConsent, location.pathname, navigate]);
