@@ -6,6 +6,7 @@ import { FileText, Download, TrendingUp, Calendar } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
+import autoTable from 'jspdf-autotable';
 
 type ReportPeriod = "weekly" | "monthly" | "quarterly";
 
@@ -14,120 +15,202 @@ export const DiabetesReportGenerator = () => {
   const [reportPeriod, setReportPeriod] = useState<ReportPeriod>("weekly");
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const generateReport = () => {
+  const generateReport = async () => {
     setIsGenerating(true);
     
-    setTimeout(() => {
+    setTimeout(async () => {
       const pdf = new jsPDF();
       const pageWidth = pdf.internal.pageSize.getWidth();
       let yPos = 20;
 
-      // Header
-      pdf.setFontSize(22);
+      // Cover Page with Gradient Background
+      pdf.setFillColor(214, 40, 40);
+      pdf.rect(0, 0, pageWidth, 60, 'F');
+      
+      pdf.setFontSize(32);
+      pdf.setTextColor(255, 255, 255);
+      pdf.text("Glucose Lilly", pageWidth / 2, 35, { align: "center" });
+      
+      pdf.setFontSize(16);
+      pdf.text("Professional Diabetes Management Report", pageWidth / 2, 50, { align: "center" });
+
+      // Patient Info Box
+      yPos = 75;
+      pdf.setFillColor(245, 245, 245);
+      pdf.roundedRect(15, yPos, pageWidth - 30, 45, 3, 3, 'F');
+      
+      pdf.setFontSize(14);
       pdf.setTextColor(214, 40, 40);
-      pdf.text("Professional Diabetes Report", pageWidth / 2, yPos, { align: "center" });
+      pdf.text("Patient Information", 20, yPos + 10);
       
-      yPos += 10;
-      pdf.setFontSize(10);
-      pdf.setTextColor(100, 100, 100);
-      pdf.text(`Generated: ${new Date().toLocaleDateString()}`, pageWidth / 2, yPos, { align: "center" });
-      
-      // Patient Information
-      yPos += 15;
-      pdf.setFontSize(14);
+      pdf.setFontSize(11);
       pdf.setTextColor(0, 0, 0);
-      pdf.text("Patient Information", 20, yPos);
-      
-      yPos += 8;
-      pdf.setFontSize(10);
-      pdf.text(`Name: ${profile?.name || "Patient"}`, 20, yPos);
-      yPos += 6;
-      pdf.text(`Diabetes Type: ${profile?.diabetesType || "Type 2"}`, 20, yPos);
-      yPos += 6;
-      pdf.text(`BMI: ${profile?.bmi || "N/A"}`, 20, yPos);
-      yPos += 6;
-      pdf.text(`Report Period: ${reportPeriod.charAt(0).toUpperCase() + reportPeriod.slice(1)}`, 20, yPos);
+      pdf.text(`Name: ${profile?.name || "Patient"}`, 25, yPos + 20);
+      pdf.text(`Diabetes Type: ${profile?.diabetesType || "Type 2"}`, 25, yPos + 28);
+      pdf.text(`BMI: ${profile?.bmi || "N/A"}`, 25, yPos + 36);
+      pdf.text(`Generated: ${new Date().toLocaleDateString()}`, pageWidth - 80, yPos + 20);
+      pdf.text(`Period: ${reportPeriod.charAt(0).toUpperCase() + reportPeriod.slice(1)}`, pageWidth - 80, yPos + 28);
 
-      // Summary Statistics
-      yPos += 15;
-      pdf.setFontSize(14);
-      pdf.setTextColor(0, 0, 0);
-      pdf.text("Summary Statistics", 20, yPos);
-      
-      yPos += 8;
-      pdf.setFontSize(10);
-      pdf.text(`Average Glucose: ${weeklyStats.avgGlucose} mg/dL`, 20, yPos);
-      yPos += 6;
-      pdf.text(`Improvement: ${weeklyStats.improvement > 0 ? '+' : ''}${weeklyStats.improvement}%`, 20, yPos);
-      yPos += 6;
-      pdf.text(`Total Steps: ${weeklyStats.totalSteps.toLocaleString()}`, 20, yPos);
-      yPos += 6;
-      pdf.text(`Exercise Sessions: ${weeklyStats.exerciseSessions}`, 20, yPos);
+      // Key Metrics Dashboard
+      yPos = 135;
+      pdf.setFontSize(16);
+      pdf.setTextColor(214, 40, 40);
+      pdf.text("Key Health Metrics", 20, yPos);
 
-      // Glucose Readings
-      const glucoseReadings = metrics.filter(m => m.type === "glucose").slice(0, 10);
-      if (glucoseReadings.length > 0) {
-        yPos += 15;
-        pdf.setFontSize(14);
-        pdf.text("Recent Glucose Readings", 20, yPos);
-        
-        yPos += 8;
-        pdf.setFontSize(9);
-        glucoseReadings.forEach((reading, idx) => {
-          if (yPos > 270) {
-            pdf.addPage();
-            yPos = 20;
-          }
-          const date = new Date(reading.timestamp).toLocaleDateString();
-          const time = new Date(reading.timestamp).toLocaleTimeString();
-          pdf.text(`${idx + 1}. ${date} ${time}: ${Math.round(reading.value)} mg/dL`, 25, yPos);
-          yPos += 5;
-        });
-      }
+      // Draw metric cards
+      const metrics_data = [
+        { label: "Avg Glucose", value: `${weeklyStats.avgGlucose} mg/dL`, color: [214, 40, 40] },
+        { label: "Improvement", value: `${weeklyStats.improvement > 0 ? '+' : ''}${weeklyStats.improvement}%`, color: [34, 197, 94] },
+        { label: "Total Steps", value: weeklyStats.totalSteps.toLocaleString(), color: [59, 130, 246] },
+        { label: "Workouts", value: `${weeklyStats.exerciseSessions}`, color: [168, 85, 247] }
+      ];
 
-      // Recent Meals
-      const meals = metrics.filter(m => m.type === "meal").slice(0, 5);
-      if (meals.length > 0) {
-        yPos += 10;
-        if (yPos > 250) {
-          pdf.addPage();
-          yPos = 20;
+      let xPos = 20;
+      yPos = 145;
+      metrics_data.forEach((metric, idx) => {
+        if (idx === 2) {
+          xPos = 20;
+          yPos = 175;
         }
-        pdf.setFontSize(14);
-        pdf.text("Recent Meals", 20, yPos);
         
-        yPos += 8;
+        pdf.setFillColor(250, 250, 250);
+        pdf.roundedRect(xPos, yPos, 85, 22, 2, 2, 'F');
+        
+        pdf.setFillColor(metric.color[0], metric.color[1], metric.color[2]);
+        pdf.circle(xPos + 8, yPos + 11, 3, 'F');
+        
         pdf.setFontSize(9);
-        meals.forEach((meal, idx) => {
-          if (yPos > 270) {
-            pdf.addPage();
-            yPos = 20;
+        pdf.setTextColor(100, 100, 100);
+        pdf.text(metric.label, xPos + 15, yPos + 9);
+        
+        pdf.setFontSize(14);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text(metric.value, xPos + 15, yPos + 17);
+        
+        xPos += 90;
+      });
+
+      // Glucose Trend Chart
+      yPos = 210;
+      pdf.setFontSize(16);
+      pdf.setTextColor(214, 40, 40);
+      pdf.text("Glucose Trend Analysis", 20, yPos);
+
+      const glucoseReadings = metrics.filter(m => m.type === "glucose").slice(0, 10).reverse();
+      if (glucoseReadings.length > 0) {
+        yPos += 10;
+        const chartHeight = 50;
+        const chartWidth = pageWidth - 40;
+        const maxGlucose = Math.max(...glucoseReadings.map(r => r.value));
+        const minGlucose = Math.min(...glucoseReadings.map(r => r.value));
+        const range = maxGlucose - minGlucose || 50;
+
+        // Draw chart background
+        pdf.setFillColor(250, 250, 250);
+        pdf.rect(20, yPos, chartWidth, chartHeight, 'F');
+        
+        // Draw grid lines
+        pdf.setDrawColor(220, 220, 220);
+        pdf.setLineWidth(0.1);
+        for (let i = 0; i <= 4; i++) {
+          const y = yPos + (chartHeight / 4) * i;
+          pdf.line(20, y, 20 + chartWidth, y);
+        }
+
+        // Draw glucose line
+        pdf.setDrawColor(214, 40, 40);
+        pdf.setLineWidth(2);
+        glucoseReadings.forEach((reading, idx) => {
+          if (idx > 0) {
+            const x1 = 20 + ((chartWidth / (glucoseReadings.length - 1)) * (idx - 1));
+            const y1 = yPos + chartHeight - ((glucoseReadings[idx - 1].value - minGlucose) / range * chartHeight);
+            const x2 = 20 + ((chartWidth / (glucoseReadings.length - 1)) * idx);
+            const y2 = yPos + chartHeight - ((reading.value - minGlucose) / range * chartHeight);
+            pdf.line(x1, y1, x2, y2);
           }
-          const date = new Date(meal.timestamp).toLocaleDateString();
-          pdf.text(`${idx + 1}. ${date}: ${meal.mealDetails?.name || "Meal"}`, 25, yPos);
-          yPos += 5;
-          if (meal.mealDetails?.carbs) {
-            pdf.text(`   Carbs: ${meal.mealDetails.carbs}g, Calories: ${meal.mealDetails.calories || 0}`, 25, yPos);
-            yPos += 5;
-          }
+          
+          // Draw data points
+          const x = 20 + ((chartWidth / (glucoseReadings.length - 1)) * idx);
+          const y = yPos + chartHeight - ((reading.value - minGlucose) / range * chartHeight);
+          pdf.setFillColor(214, 40, 40);
+          pdf.circle(x, y, 2, 'F');
+        });
+
+        // Y-axis labels
+        pdf.setFontSize(8);
+        pdf.setTextColor(100, 100, 100);
+        pdf.text(`${Math.round(maxGlucose)}`, 15, yPos + 5, { align: "right" });
+        pdf.text(`${Math.round(minGlucose)}`, 15, yPos + chartHeight, { align: "right" });
+      }
+
+      // New Page for Detailed Data
+      pdf.addPage();
+      yPos = 20;
+
+      // Glucose Readings Table
+      pdf.setFontSize(16);
+      pdf.setTextColor(214, 40, 40);
+      pdf.text("Detailed Glucose Readings", 20, yPos);
+      
+      const glucoseTableData = glucoseReadings.slice(0, 15).map(reading => [
+        new Date(reading.timestamp).toLocaleDateString(),
+        new Date(reading.timestamp).toLocaleTimeString(),
+        `${Math.round(reading.value)} mg/dL`,
+        reading.notes || "-"
+      ]);
+
+      autoTable(pdf, {
+        startY: yPos + 5,
+        head: [['Date', 'Time', 'Glucose Level', 'Notes']],
+        body: glucoseTableData,
+        theme: 'grid',
+        headStyles: { fillColor: [214, 40, 40], textColor: 255 },
+        alternateRowStyles: { fillColor: [250, 250, 250] },
+        margin: { left: 20, right: 20 },
+      });
+
+      yPos = (pdf as any).lastAutoTable.finalY + 15;
+
+      // Meals Summary
+      const meals = metrics.filter(m => m.type === "meal").slice(0, 10);
+      if (meals.length > 0 && yPos < 250) {
+        pdf.setFontSize(16);
+        pdf.setTextColor(214, 40, 40);
+        pdf.text("Recent Meals & Nutrition", 20, yPos);
+        
+        const mealsTableData = meals.map(meal => [
+          new Date(meal.timestamp).toLocaleDateString(),
+          meal.mealDetails?.name || "Meal",
+          `${meal.mealDetails?.carbs || 0}g`,
+          `${meal.mealDetails?.calories || 0}`,
+        ]);
+
+        autoTable(pdf, {
+          startY: yPos + 5,
+          head: [['Date', 'Meal', 'Carbs', 'Calories']],
+          body: mealsTableData,
+          theme: 'grid',
+          headStyles: { fillColor: [214, 40, 40], textColor: 255 },
+          alternateRowStyles: { fillColor: [250, 250, 250] },
+          margin: { left: 20, right: 20 },
         });
       }
 
-      // Footer
+      // Footer on all pages
       const totalPages = pdf.internal.pages.length - 1;
       for (let i = 1; i <= totalPages; i++) {
         pdf.setPage(i);
         pdf.setFontSize(8);
         pdf.setTextColor(150, 150, 150);
         pdf.text(`Page ${i} of ${totalPages}`, pageWidth / 2, 285, { align: "center" });
-        pdf.text("GlucoLilly - Professional Diabetes Management", pageWidth / 2, 290, { align: "center" });
+        pdf.text("Glucose Lilly - Professional Diabetes Management", pageWidth / 2, 290, { align: "center" });
       }
 
       // Save PDF
-      pdf.save(`diabetes-report-${reportPeriod}-${new Date().toISOString().split('T')[0]}.pdf`);
+      pdf.save(`glucose-lilly-report-${reportPeriod}-${new Date().toISOString().split('T')[0]}.pdf`);
       
       setIsGenerating(false);
-      toast.success(`${reportPeriod.charAt(0).toUpperCase() + reportPeriod.slice(1)} report generated successfully`);
+      toast.success(`Professional report generated successfully`);
     }, 1500);
   };
 
