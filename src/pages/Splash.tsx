@@ -27,7 +27,7 @@ const Splash = () => {
       {/* Title takes ~61.8% of vertical space (Golden Ratio) */}
       <div className="flex-[0.618] flex flex-col items-center justify-center text-center animate-fade-in">
         <h1 className="text-6xl md:text-8xl font-bold text-primary mb-phi-3">GlucoLilly</h1>
-        <Accessibility className="h-12 w-12 text-muted-foreground/40 mb-phi-4" aria-hidden="true" />
+        {/* <Accessibility className="h-12 w-12 text-muted-foreground/40 mb-phi-4" aria-hidden="true" /> */}
         <p className="text-2xl md:text-3xl text-foreground font-medium mb-phi-2">Empower Your Wellness</p>
         <p className="text-lg text-muted-foreground max-w-md">
           Your AI-powered accessible companion for diabetes management
