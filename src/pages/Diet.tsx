@@ -23,9 +23,46 @@ const Diet = () => {
   const { theme, setTheme } = useTheme();
   const [selectedRecipe, setSelectedRecipe] = useState<string | null>(null);
 
-  const handlePlayAudio = (recipeName: string) => {
-    toast.success(`Playing audio guide for: ${recipeName}`);
-    // In production, this would use text-to-speech or pre-recorded audio
+  const handlePlayAudio = (recipeName: string, fullRecipe?: boolean) => {
+    if (!('speechSynthesis' in window)) {
+      toast.error("Text-to-speech not supported in your browser");
+      return;
+    }
+
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+
+    const recipeData = recipes.find(r => r.name === recipeName);
+    if (!recipeData) return;
+
+    let textToSpeak = '';
+    
+    if (fullRecipe) {
+      // Full recipe with ingredients and instructions
+      textToSpeak = `${recipeData.name}. `;
+      textToSpeak += `This recipe has ${recipeData.calories} calories, ${recipeData.carbs} grams of carbohydrates, and ${recipeData.protein} grams of protein. `;
+      textToSpeak += `Ingredients: ${recipeData.ingredients.join(', ')}. `;
+      textToSpeak += `Instructions: ${recipeData.instructions.join('. ')}`;
+    } else {
+      // Short description for recipe cards
+      textToSpeak = `${recipeData.name}. ${recipeData.prepTime}. ${recipeData.calories} calories, ${recipeData.carbs} grams of carbs, ${recipeData.protein} grams of protein.`;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    utterance.rate = 0.9; // Slightly slower for better comprehension
+    utterance.pitch = 1;
+    utterance.volume = 1;
+
+    utterance.onstart = () => {
+      toast.success(`Playing audio guide for: ${recipeName}`);
+    };
+
+    utterance.onerror = (event) => {
+      toast.error("Error playing audio");
+      console.error('Speech synthesis error:', event);
+    };
+
+    window.speechSynthesis.speak(utterance);
   };
 
   const recipe = selectedRecipe 
@@ -87,8 +124,8 @@ const Diet = () => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="bg-background/80 backdrop-blur"
-                        onClick={() => handlePlayAudio(recipe.name)}
+                        className="bg-background/80 backdrop-blur min-h-touch min-w-touch"
+                        onClick={() => handlePlayAudio(recipe.name, false)}
                         aria-label={`Play audio for ${recipe.name}`}
                       >
                         <Volume2 className="h-5 w-5 text-primary" />
@@ -152,7 +189,8 @@ const Diet = () => {
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => handlePlayAudio(recipe!.name)}
+                className="min-h-touch min-w-touch"
+                onClick={() => handlePlayAudio(recipe!.name, true)}
                 aria-label={`Play full audio guide for ${recipe!.name}`}
               >
                 <Volume2 className="h-5 w-5" />
