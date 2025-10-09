@@ -1,22 +1,115 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Volume2, Accessibility } from "lucide-react";
+import { Volume2, Accessibility, Mic } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Splash = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [showVoicePrompt, setShowVoicePrompt] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+
+  const speakMessage = (message: string, onEndCallback?: () => void) => {
+    if ("speechSynthesis" in window) {
+      const utterance = new SpeechSynthesisUtterance(message);
+      utterance.lang = "en-US";
+      if (onEndCallback) {
+        utterance.onend = onEndCallback;
+      }
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  const startListening = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunksRef.current.push(event.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        await processVoiceResponse(audioBlob);
+        stream.getTracks().forEach((track) => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsListening(true);
+
+      // Stop recording after 3 seconds
+      setTimeout(() => {
+        if (mediaRecorder.state === "recording") {
+          mediaRecorder.stop();
+          setIsListening(false);
+        }
+      }, 3000);
+    } catch (error) {
+      console.error("Error accessing microphone:", error);
+      toast({
+        title: "Microphone Error",
+        description: "Could not access microphone. Please check permissions.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const processVoiceResponse = async (audioBlob: Blob) => {
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(audioBlob);
+      reader.onloadend = async () => {
+        const base64Audio = reader.result?.toString().split(",")[1];
+        
+        const { data, error } = await supabase.functions.invoke("speech-to-text", {
+          body: { audioBase64: base64Audio },
+        });
+
+        if (error) throw error;
+
+        const transcript = data.text.toLowerCase().trim();
+        console.log("Transcript:", transcript);
+        
+        if (transcript.includes("yes") || transcript.includes("yeah") || transcript.includes("sure")) {
+          speakMessage("Great! Let's get started.");
+          setTimeout(() => navigate("/voice-setup"), 1500);
+        } else if (transcript.includes("no") || transcript.includes("nope")) {
+          speakMessage("Would you like to start onboarding?", () => {
+            startListening();
+          });
+        } else {
+          speakMessage("I didn't understand. Please say yes or no.", () => {
+            startListening();
+          });
+        }
+      };
+    } catch (error) {
+      console.error("Error processing voice response:", error);
+      toast({
+        title: "Voice Recognition Error",
+        description: "Could not process your response. Please try again.",
+        variant: "destructive",
+      });
+      speakMessage("I couldn't hear you. Would you like to start onboarding?", () => {
+        startListening();
+      });
+    }
+  };
 
   useEffect(() => {
     // Show voice prompt after 5 seconds of inactivity
     const timer = setTimeout(() => {
       setShowVoicePrompt(true);
-      // Simulate voice prompt
-      if ("speechSynthesis" in window) {
-        const utterance = new SpeechSynthesisUtterance("Would you like to start onboarding?");
-        utterance.lang = "en-US";
-        window.speechSynthesis.speak(utterance);
-      }
+      speakMessage("Would you like to start onboarding?", () => {
+        startListening();
+      });
     }, 5000);
 
     return () => clearTimeout(timer);
@@ -46,9 +139,31 @@ const Splash = () => {
         </Button>
 
         {showVoicePrompt && (
-          <div className="flex items-center gap-phi-2 text-muted-foreground animate-slide-up">
-            <Volume2 className="h-5 w-5" aria-hidden="true" />
-            <span className="text-sm">Would you like to start onboarding?</span>
+          <div className="flex flex-col items-center gap-phi-3 animate-slide-up">
+            <div className="flex items-center gap-phi-2 text-muted-foreground">
+              {isListening ? (
+                <>
+                  <Mic className="h-5 w-5 animate-pulse text-primary" aria-hidden="true" />
+                  <span className="text-sm">Listening...</span>
+                </>
+              ) : (
+                <>
+                  <Volume2 className="h-5 w-5" aria-hidden="true" />
+                  <span className="text-sm">Would you like to start onboarding?</span>
+                </>
+              )}
+            </div>
+            {!isListening && (
+              <Button
+                onClick={startListening}
+                size="sm"
+                variant="outline"
+                className="min-h-touch"
+              >
+                <Mic className="mr-2 h-4 w-4" />
+                Tap to Respond
+              </Button>
+            )}
           </div>
         )}
 
