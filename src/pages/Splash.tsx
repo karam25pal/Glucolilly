@@ -26,16 +26,16 @@ const Splash = () => {
 
   const startListening = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          sampleRate: 16000
-        } 
+          sampleRate: 16000,
+        },
       });
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm',
+        mimeType: "audio/webm",
       });
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
@@ -62,7 +62,7 @@ const Splash = () => {
           mediaRecorder.stop();
           setIsListening(false);
         }
-      }, 5000);
+      }, 10000);
     } catch (error) {
       console.error("Error accessing microphone:", error);
       toast({
@@ -87,7 +87,7 @@ const Splash = () => {
       reader.readAsDataURL(audioBlob);
       reader.onloadend = async () => {
         const base64Audio = reader.result?.toString().split(",")[1];
-        
+
         if (!base64Audio) {
           console.error("Failed to encode audio");
           speakMessage("Audio processing failed. Please try again.", () => {
@@ -97,7 +97,7 @@ const Splash = () => {
         }
 
         console.log("Sending audio to speech-to-text, size:", base64Audio.length);
-        
+
         const { data, error } = await supabase.functions.invoke("speech-to-text", {
           body: { audioBase64: base64Audio },
         });
@@ -109,21 +109,21 @@ const Splash = () => {
 
         const transcript = (data?.transcription || data?.text || "").toLowerCase().trim();
         console.log("Received transcript:", transcript);
-        
+
         if (!transcript || transcript.length === 0) {
           speakMessage("I didn't catch that. Please say 'yes' to continue or 'no' to stay.", () => {
             startListening();
           });
           return;
         }
-        
+
         // More flexible matching - check for any positive or negative indicators
         const positiveWords = ["yes", "yeah", "yep", "sure", "okay", "ok", "continue", "start", "go"];
         const negativeWords = ["no", "nope", "nah", "stop", "wait", "not"];
-        
-        const isPositive = positiveWords.some(word => transcript.includes(word));
-        const isNegative = negativeWords.some(word => transcript.includes(word));
-        
+
+        const isPositive = positiveWords.some((word) => transcript.includes(word));
+        const isNegative = negativeWords.some((word) => transcript.includes(word));
+
         if (isPositive && !isNegative) {
           speakMessage("Great! Let's get started.");
           setTimeout(() => navigate("/voice-setup"), 1500);
@@ -198,9 +198,7 @@ const Splash = () => {
                 </>
               )}
             </div>
-            <p className="text-xs text-muted-foreground text-center max-w-md">
-              Say "Yes" to continue or "No" to stay
-            </p>
+            <p className="text-xs text-muted-foreground text-center max-w-md">Say "Yes" to continue or "No" to stay</p>
           </div>
         )}
 
