@@ -26,17 +26,29 @@ const Splash = () => {
 
   const startListening = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 16000
+        } 
+      });
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm',
+      });
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
       mediaRecorder.ondataavailable = (event) => {
-        audioChunksRef.current.push(event.data);
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
       };
 
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        console.log("Audio blob size:", audioBlob.size);
         await processVoiceResponse(audioBlob);
         stream.getTracks().forEach((track) => track.stop());
       };
@@ -44,18 +56,18 @@ const Splash = () => {
       mediaRecorder.start();
       setIsListening(true);
 
-      // Stop recording after 3 seconds
+      // Stop recording after 5 seconds for better capture
       setTimeout(() => {
         if (mediaRecorder.state === "recording") {
           mediaRecorder.stop();
           setIsListening(false);
         }
-      }, 3000);
+      }, 5000);
     } catch (error) {
       console.error("Error accessing microphone:", error);
       toast({
-        title: "Microphone Error",
-        description: "Could not access microphone. Please check permissions.",
+        title: "Microphone Permission Required",
+        description: "Please allow microphone access to use voice commands.",
         variant: "destructive",
       });
     }
@@ -63,29 +75,64 @@ const Splash = () => {
 
   const processVoiceResponse = async (audioBlob: Blob) => {
     try {
+      if (audioBlob.size === 0) {
+        console.error("Empty audio blob");
+        speakMessage("I didn't hear anything. Please try again.", () => {
+          startListening();
+        });
+        return;
+      }
+
       const reader = new FileReader();
       reader.readAsDataURL(audioBlob);
       reader.onloadend = async () => {
         const base64Audio = reader.result?.toString().split(",")[1];
         
+        if (!base64Audio) {
+          console.error("Failed to encode audio");
+          speakMessage("Audio processing failed. Please try again.", () => {
+            startListening();
+          });
+          return;
+        }
+
+        console.log("Sending audio to speech-to-text, size:", base64Audio.length);
+        
         const { data, error } = await supabase.functions.invoke("speech-to-text", {
           body: { audioBase64: base64Audio },
         });
 
-        if (error) throw error;
+        if (error) {
+          console.error("Speech-to-text error:", error);
+          throw error;
+        }
 
         const transcript = (data?.transcription || data?.text || "").toLowerCase().trim();
-        console.log("Transcript:", transcript);
+        console.log("Received transcript:", transcript);
         
-        if (transcript.includes("yes") || transcript.includes("yeah") || transcript.includes("sure")) {
+        if (!transcript || transcript.length === 0) {
+          speakMessage("I didn't catch that. Please say 'yes' to continue or 'no' to stay.", () => {
+            startListening();
+          });
+          return;
+        }
+        
+        // More flexible matching - check for any positive or negative indicators
+        const positiveWords = ["yes", "yeah", "yep", "sure", "okay", "ok", "continue", "start", "go"];
+        const negativeWords = ["no", "nope", "nah", "stop", "wait", "not"];
+        
+        const isPositive = positiveWords.some(word => transcript.includes(word));
+        const isNegative = negativeWords.some(word => transcript.includes(word));
+        
+        if (isPositive && !isNegative) {
           speakMessage("Great! Let's get started.");
           setTimeout(() => navigate("/voice-setup"), 1500);
-        } else if (transcript.includes("no") || transcript.includes("nope")) {
+        } else if (isNegative && !isPositive) {
           speakMessage("Would you like to start onboarding?", () => {
             startListening();
           });
         } else {
-          speakMessage("I didn't understand. Please say yes or no.", () => {
+          speakMessage("I didn't understand. Please say 'yes' to continue or 'no' to stay.", () => {
             startListening();
           });
         }
@@ -94,12 +141,10 @@ const Splash = () => {
       console.error("Error processing voice response:", error);
       toast({
         title: "Voice Recognition Error",
-        description: "Could not process your response. Please try again.",
+        description: "Could not process your response. Using buttons instead.",
         variant: "destructive",
       });
-      speakMessage("I couldn't hear you. Would you like to start onboarding?", () => {
-        startListening();
-      });
+      speakMessage("Voice recognition failed. Please try again or use the buttons below.");
     }
   };
 
@@ -139,18 +184,23 @@ const Splash = () => {
         </Button>
 
         {showVoicePrompt && (
-          <div className="flex items-center gap-phi-2 text-muted-foreground animate-slide-up">
-            {isListening ? (
-              <>
-                <Mic className="h-5 w-5 animate-pulse text-primary" aria-hidden="true" />
-                <span className="text-sm">Listening...</span>
-              </>
-            ) : (
-              <>
-                <Volume2 className="h-5 w-5" aria-hidden="true" />
-                <span className="text-sm">Would you like to start onboarding?</span>
-              </>
-            )}
+          <div className="flex flex-col items-center gap-phi-3 animate-slide-up">
+            <div className="flex items-center gap-phi-2 text-muted-foreground">
+              {isListening ? (
+                <>
+                  <Mic className="h-5 w-5 animate-pulse text-primary" aria-hidden="true" />
+                  <span className="text-sm font-medium">Listening... (speak now)</span>
+                </>
+              ) : (
+                <>
+                  <Volume2 className="h-5 w-5" aria-hidden="true" />
+                  <span className="text-sm">Would you like to start onboarding?</span>
+                </>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground text-center max-w-md">
+              Say "Yes" to continue or "No" to stay
+            </p>
           </div>
         )}
 
