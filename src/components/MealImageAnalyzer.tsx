@@ -1,7 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Camera, Upload, X, Loader2, CheckCircle2, AlertCircle, Info, Apple, TrendingUp, TrendingDown, Activity, Minus } from "lucide-react";
+import { Camera, Upload, X, Loader2, CheckCircle2, AlertCircle, Info, Apple, TrendingUp, TrendingDown, Activity, Minus, Save } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { useUser } from "@/contexts/UserContext";
@@ -9,10 +9,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const MealImageAnalyzer = () => {
-  const { profile, weeklyStats } = useUser();
+  const { profile, weeklyStats, addMetric } = useUser();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<string | null>(null);
+  const [mealData, setMealData] = useState<{
+    name: string;
+    carbs?: number;
+    protein?: number;
+    calories?: number;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -63,6 +69,20 @@ export const MealImageAnalyzer = () => {
           .replace(/\*/g, ''); // Remove any remaining asterisks
         
         setAnalysis(cleanedAnalysis);
+        
+        // Extract meal data from analysis
+        const carbsMatch = cleanedAnalysis.match(/carb[s]?[:\s]+(\d+)[\s]*g/i);
+        const proteinMatch = cleanedAnalysis.match(/protein[:\s]+(\d+)[\s]*g/i);
+        const caloriesMatch = cleanedAnalysis.match(/calor[iy]+[es]*[:\s]+(\d+)/i);
+        const mealNameMatch = cleanedAnalysis.match(/^([^.!?\n]+)/);
+        
+        setMealData({
+          name: mealNameMatch?.[1]?.trim() || "Analyzed Meal",
+          carbs: carbsMatch ? parseInt(carbsMatch[1]) : undefined,
+          protein: proteinMatch ? parseInt(proteinMatch[1]) : undefined,
+          calories: caloriesMatch ? parseInt(caloriesMatch[1]) : undefined,
+        });
+        
         toast.success("Meal analyzed successfully!");
       } else {
         throw new Error("No analysis received");
@@ -75,9 +95,28 @@ export const MealImageAnalyzer = () => {
     }
   };
 
+  const handleSaveToMetrics = useCallback(() => {
+    if (!mealData) return;
+
+    addMetric({
+      type: "meal",
+      value: mealData.calories || 0,
+      unit: "kcal",
+      mealDetails: {
+        name: mealData.name,
+        carbs: mealData.carbs,
+        calories: mealData.calories,
+      },
+      notes: "Logged from AI Meal Analyzer",
+    });
+
+    toast.success("Meal saved to your health metrics!");
+  }, [mealData, addMetric]);
+
   const handleReset = () => {
     setSelectedImage(null);
     setAnalysis(null);
+    setMealData(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
     if (cameraInputRef.current) cameraInputRef.current.value = "";
   };
@@ -333,13 +372,24 @@ export const MealImageAnalyzer = () => {
                   </div>
                 </div>
 
-                <Button
-                  variant="outline"
-                  onClick={handleReset}
-                  className="w-full min-h-touch text-sm sm:text-base"
-                >
-                  Analyze Another Meal
-                </Button>
+                <div className="flex gap-phi-3">
+                  <Button
+                    variant="default"
+                    onClick={handleSaveToMetrics}
+                    className="flex-1 min-h-touch text-sm sm:text-base"
+                    disabled={!mealData}
+                  >
+                    <Save className="h-4 w-4 mr-phi-2" />
+                    Save to Metrics
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleReset}
+                    className="flex-1 min-h-touch text-sm sm:text-base"
+                  >
+                    Analyze Another
+                  </Button>
+                </div>
               </div>
             )}
           </div>

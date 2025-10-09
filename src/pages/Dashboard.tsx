@@ -17,9 +17,10 @@ const Dashboard = () => {
   const [showAssistant, setShowAssistant] = useState(false);
   const navigate = useNavigate();
 
-  // Load demo data if no metrics exist
+  // Load demo data if no metrics exist (only once)
   useEffect(() => {
-    if (metrics.length === 0) {
+    const hasLoadedDemo = localStorage.getItem('demo-data-loaded');
+    if (metrics.length === 0 && !hasLoadedDemo) {
       const demoMetrics = generateMockMetrics();
       demoMetrics.forEach(metric => {
         addMetric({
@@ -31,12 +32,19 @@ const Dashboard = () => {
           exerciseDetails: metric.exerciseDetails,
         });
       });
+      localStorage.setItem('demo-data-loaded', 'true');
       toast.success("Demo data loaded for testing");
     }
   }, []);
 
   const latestGlucose = metrics.find(m => m.type === "glucose");
   const todaySteps = metrics.find(m => m.type === "steps");
+  const todayMeals = metrics.filter(m => {
+    const today = new Date();
+    const metricDate = new Date(m.timestamp);
+    return m.type === "meal" && 
+           metricDate.toDateString() === today.toDateString();
+  });
 
   const handleExportReport = () => {
     const reportData = {
@@ -153,7 +161,27 @@ const Dashboard = () => {
           </Card>
 
           <Card className="p-phi-4">
-            <h2 className="text-lg font-semibold mb-phi-3">Today's Steps</h2>
+            <div className="flex items-center gap-phi-3 mb-phi-2">
+              <div className="p-phi-2 bg-primary/10 rounded-lg">
+                <Utensils className="h-6 w-6 text-primary" aria-hidden="true" />
+              </div>
+              <h2 className="text-lg font-semibold">Today's Meals</h2>
+            </div>
+            <p className="text-3xl font-bold text-foreground mb-phi-1">
+              {todayMeals.length}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {todayMeals.reduce((sum, m) => sum + (m.mealDetails?.calories || 0), 0)} total calories
+            </p>
+          </Card>
+
+          <Card className="p-phi-4">
+            <div className="flex items-center gap-phi-3 mb-phi-2">
+              <div className="p-phi-2 bg-primary/10 rounded-lg">
+                <Dumbbell className="h-6 w-6 text-primary" aria-hidden="true" />
+              </div>
+              <h2 className="text-lg font-semibold">Today's Steps</h2>
+            </div>
             <p className="text-3xl font-bold text-foreground mb-phi-1">
               {todaySteps ? Math.round(todaySteps.value).toLocaleString() : '0'}
             </p>
@@ -167,7 +195,12 @@ const Dashboard = () => {
           </Card>
 
           <Card className="p-phi-4">
-            <h2 className="text-lg font-semibold mb-phi-3">BMI</h2>
+            <div className="flex items-center gap-phi-3 mb-phi-2">
+              <div className="p-phi-2 bg-primary/10 rounded-lg">
+                <Activity className="h-6 w-6 text-primary" aria-hidden="true" />
+              </div>
+              <h2 className="text-lg font-semibold">BMI</h2>
+            </div>
             <p className="text-3xl font-bold text-foreground mb-phi-1">
               {profile?.bmi || '--'}
             </p>

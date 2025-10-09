@@ -56,14 +56,24 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return saved ? JSON.parse(saved) : [];
   });
 
+  // Sync profile to localStorage with error handling
   useEffect(() => {
-    if (profile) {
-      localStorage.setItem('user-profile', JSON.stringify(profile));
+    try {
+      if (profile) {
+        localStorage.setItem('user-profile', JSON.stringify(profile));
+      }
+    } catch (error) {
+      console.error('Failed to save profile to localStorage:', error);
     }
   }, [profile]);
 
+  // Sync metrics to localStorage with error handling
   useEffect(() => {
-    localStorage.setItem('health-metrics', JSON.stringify(metrics));
+    try {
+      localStorage.setItem('health-metrics', JSON.stringify(metrics));
+    } catch (error) {
+      console.error('Failed to save metrics to localStorage:', error);
+    }
   }, [metrics]);
 
   const setProfile = (newProfile: UserProfile) => {
@@ -72,12 +82,21 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addMetric = (metric: Omit<HealthMetric, "id" | "timestamp">) => {
-    const newMetric: HealthMetric = {
-      ...metric,
-      id: `metric-${Date.now()}`,
-      timestamp: new Date().toISOString(),
-    };
-    setMetrics(prev => [newMetric, ...prev]);
+    try {
+      const newMetric: HealthMetric = {
+        ...metric,
+        id: `metric-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: new Date().toISOString(),
+      };
+      setMetrics(prev => {
+        const updated = [newMetric, ...prev];
+        // Keep only last 1000 metrics to prevent localStorage overflow
+        return updated.slice(0, 1000);
+      });
+    } catch (error) {
+      console.error('Failed to add metric:', error);
+      throw error;
+    }
   };
 
   // Calculate weekly stats
