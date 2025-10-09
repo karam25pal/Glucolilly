@@ -1,7 +1,9 @@
 import { useState, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Camera, Upload, X, Loader2, CheckCircle2, AlertCircle, Info } from "lucide-react";
+import { Camera, Upload, X, Loader2, CheckCircle2, AlertCircle, Info, Apple, TrendingUp, TrendingDown, Activity, Minus } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { useUser } from "@/contexts/UserContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -185,102 +187,138 @@ export const MealImageAnalyzer = () => {
                   </div>
 
                   {/* Content */}
-                  <div className="p-phi-3 sm:p-phi-4">
-                    {/* Parse and display structured analysis */}
-                    {analysis.split('\n\n').map((section, idx) => {
-                      const lines = section.split('\n').filter(line => line.trim());
-                      if (lines.length === 0) return null;
+                  <div className="p-phi-3 sm:p-phi-4 space-y-phi-4">
+                    {/* Extract and visualize key metrics */}
+                    {(() => {
+                      // Parse nutritional values from analysis
+                      const carbsMatch = analysis.match(/carb[s]?[:\s]+(\d+)[\s]*g/i);
+                      const proteinMatch = analysis.match(/protein[:\s]+(\d+)[\s]*g/i);
+                      const fiberMatch = analysis.match(/fiber[:\s]+(\d+)[\s]*g/i);
+                      const caloriesMatch = analysis.match(/calor[iy]+[es]*[:\s]+(\d+)/i);
+                      
+                      const carbs = carbsMatch ? parseInt(carbsMatch[1]) : null;
+                      const protein = proteinMatch ? parseInt(proteinMatch[1]) : null;
+                      const fiber = fiberMatch ? parseInt(fiberMatch[1]) : null;
+                      const calories = caloriesMatch ? parseInt(caloriesMatch[1]) : null;
 
-                      // Check if this is a numbered/bulleted list section
-                      const hasListItems = lines.some(line => 
-                        /^[\d]+\./.test(line.trim()) || /^[•\-\*]/.test(line.trim())
-                      );
+                      // Determine impact level
+                      const getImpact = () => {
+                        if (analysis.toLowerCase().includes('high') && analysis.toLowerCase().includes('sugar')) return 'high';
+                        if (analysis.toLowerCase().includes('moderate')) return 'moderate';
+                        if (analysis.toLowerCase().includes('low')) return 'low';
+                        return 'moderate';
+                      };
+                      
+                      const impact = getImpact();
+                      const impactColors = {
+                        high: 'text-destructive',
+                        moderate: 'text-yellow-600 dark:text-yellow-500',
+                        low: 'text-green-600 dark:text-green-500'
+                      };
+                      
+                      const impactIcons = {
+                        high: TrendingUp,
+                        moderate: Minus,
+                        low: TrendingDown
+                      };
+                      
+                      const ImpactIcon = impactIcons[impact];
 
-                      if (hasListItems) {
-                        // Get section title (first line if it doesn't start with number/bullet)
-                        const titleLine = lines[0];
-                        const hasSectionTitle = !/^[\d]+\./.test(titleLine) && !/^[•\-\*]/.test(titleLine);
-                        const items = hasSectionTitle ? lines.slice(1) : lines;
+                      return (
+                        <>
+                          {/* Impact Badge */}
+                          <div className="flex items-center justify-center gap-phi-2">
+                            <ImpactIcon className={`h-5 w-5 sm:h-6 sm:w-6 ${impactColors[impact]}`} />
+                            <span className={`text-lg sm:text-xl font-bold ${impactColors[impact]}`}>
+                              {impact === 'high' ? '⚠️ High Impact' : impact === 'moderate' ? '⚡ Moderate Impact' : '✅ Low Impact'}
+                            </span>
+                          </div>
 
-                        return (
-                          <div key={idx} className="mb-phi-3 sm:mb-phi-4 last:mb-0">
-                            {hasSectionTitle && (
-                              <h4 className="text-sm sm:text-base font-semibold text-foreground mb-phi-2 flex items-center gap-phi-2">
-                                <Info className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
-                                <span>{titleLine.replace(/[:#]/g, '').trim()}</span>
-                              </h4>
+                          {/* Nutritional Metrics Grid */}
+                          <div className="grid grid-cols-2 gap-phi-3">
+                            {calories && (
+                              <div className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 rounded-lg p-phi-3 border border-orange-500/20">
+                                <div className="flex items-center gap-phi-2 mb-phi-1">
+                                  <Activity className="h-4 w-4 text-orange-500" />
+                                  <span className="text-xs text-muted-foreground">Calories</span>
+                                </div>
+                                <p className="text-2xl font-bold text-foreground">{calories}</p>
+                                <p className="text-xs text-muted-foreground">kcal</p>
+                              </div>
                             )}
-                            <div className="space-y-phi-2">
-                              {items.map((item, itemIdx) => {
-                                const cleanItem = item
-                                  .replace(/^[\d]+\.\s*/, '')
-                                  .replace(/^[•\-\*]\s*/, '')
-                                  .trim();
-                                
-                                if (!cleanItem) return null;
+                            
+                            {carbs && (
+                              <div className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 rounded-lg p-phi-3 border border-blue-500/20">
+                                <div className="flex items-center gap-phi-2 mb-phi-1">
+                                  <Apple className="h-4 w-4 text-blue-500" />
+                                  <span className="text-xs text-muted-foreground">Carbs</span>
+                                </div>
+                                <p className="text-2xl font-bold text-foreground">{carbs}g</p>
+                                <Progress value={Math.min((carbs / 60) * 100, 100)} className="h-1.5 mt-phi-2" />
+                              </div>
+                            )}
+                            
+                            {protein && (
+                              <div className="bg-gradient-to-br from-green-500/10 to-green-500/5 rounded-lg p-phi-3 border border-green-500/20">
+                                <div className="flex items-center gap-phi-2 mb-phi-1">
+                                  <span className="text-base">💪</span>
+                                  <span className="text-xs text-muted-foreground">Protein</span>
+                                </div>
+                                <p className="text-2xl font-bold text-foreground">{protein}g</p>
+                                <Progress value={Math.min((protein / 30) * 100, 100)} className="h-1.5 mt-phi-2" />
+                              </div>
+                            )}
+                            
+                            {fiber && (
+                              <div className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 rounded-lg p-phi-3 border border-purple-500/20">
+                                <div className="flex items-center gap-phi-2 mb-phi-1">
+                                  <span className="text-base">🌾</span>
+                                  <span className="text-xs text-muted-foreground">Fiber</span>
+                                </div>
+                                <p className="text-2xl font-bold text-foreground">{fiber}g</p>
+                                <Progress value={Math.min((fiber / 10) * 100, 100)} className="h-1.5 mt-phi-2" />
+                              </div>
+                            )}
+                          </div>
 
-                                // Check if item contains a label (e.g., "Carbs: 45g")
-                                const labelMatch = cleanItem.match(/^([^:]+):\s*(.+)$/);
-                                
-                                return (
-                                  <div 
-                                    key={itemIdx}
-                                    className="bg-background/60 backdrop-blur-sm rounded-lg px-phi-2 sm:px-phi-3 py-phi-2 border border-border/50"
-                                  >
-                                    {labelMatch ? (
-                                      <div className="flex items-start justify-between gap-phi-2 sm:gap-phi-3">
-                                        <span className="text-xs sm:text-sm font-medium text-muted-foreground">
-                                          {labelMatch[1]}
-                                        </span>
-                                        <span className="text-xs sm:text-sm text-foreground font-semibold text-right">
-                                          {labelMatch[2]}
-                                        </span>
-                                      </div>
-                                    ) : (
-                                      <p className="text-xs sm:text-sm text-foreground leading-relaxed">
-                                        {cleanItem}
-                                      </p>
-                                    )}
-                                  </div>
-                                );
-                              })}
+                          {/* Key Points as Badges */}
+                          <div className="space-y-phi-2">
+                            <h4 className="text-sm font-semibold text-foreground flex items-center gap-phi-2">
+                              <Info className="h-4 w-4 text-primary" />
+                              Key Points
+                            </h4>
+                            <div className="flex flex-wrap gap-phi-2">
+                              {analysis.toLowerCase().includes('whole grain') && (
+                                <Badge variant="secondary" className="text-xs">🌾 Whole Grain</Badge>
+                              )}
+                              {analysis.toLowerCase().includes('lean protein') && (
+                                <Badge variant="secondary" className="text-xs">💪 Lean Protein</Badge>
+                              )}
+                              {(analysis.toLowerCase().includes('low gi') || analysis.toLowerCase().includes('low glycemic')) && (
+                                <Badge variant="secondary" className="text-xs">📉 Low GI</Badge>
+                              )}
+                              {analysis.toLowerCase().includes('fiber') && (
+                                <Badge variant="secondary" className="text-xs">🌾 High Fiber</Badge>
+                              )}
+                              {analysis.toLowerCase().includes('omega') && (
+                                <Badge variant="secondary" className="text-xs">🐟 Omega-3</Badge>
+                              )}
+                              {analysis.toLowerCase().includes('vegetable') && (
+                                <Badge variant="secondary" className="text-xs">🥗 Vegetables</Badge>
+                              )}
                             </div>
                           </div>
-                        );
-                      }
 
-                      // Regular paragraph
-                      return (
-                        <div key={idx} className="mb-phi-2 sm:mb-phi-3 last:mb-0">
-                          {lines.map((line, lineIdx) => {
-                            // Check if line is a heading (contains ":" or is short and bold-worthy)
-                            const isHeading = line.includes(':') && line.length < 50;
-                            const [heading, ...rest] = line.split(':');
-                            
-                            if (isHeading && rest.length > 0) {
-                              return (
-                                <div key={lineIdx} className="mb-phi-2">
-                                  <p className="text-xs sm:text-sm">
-                                    <span className="font-semibold text-primary">
-                                      {heading}:
-                                    </span>
-                                    <span className="text-foreground ml-1">
-                                      {rest.join(':').trim()}
-                                    </span>
-                                  </p>
-                                </div>
-                              );
-                            }
-                            
-                            return (
-                              <p key={lineIdx} className="text-xs sm:text-sm text-foreground leading-relaxed mb-phi-1">
-                                {line}
-                              </p>
-                            );
-                          })}
-                        </div>
+                          {/* Brief Summary */}
+                          <div className="bg-muted/50 rounded-lg p-phi-3">
+                            <p className="text-xs sm:text-sm text-foreground leading-relaxed">
+                              {analysis.split('\n').find(line => line.length > 50 && !line.includes(':'))?.trim() || 
+                               'This meal has been analyzed based on your diabetes profile.'}
+                            </p>
+                          </div>
+                        </>
                       );
-                    })}
+                    })()}
                   </div>
 
                   {/* Footer tip */}
