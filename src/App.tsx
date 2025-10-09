@@ -7,6 +7,7 @@ import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { UserProvider } from "@/contexts/UserContext";
 import Splash from "./pages/Splash";
+import VoiceNavigationTimer from "./pages/VoiceNavigationTimer";
 import AccessibilitySelection from "./pages/AccessibilitySelection";
 import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
@@ -27,6 +28,7 @@ const App = () => (
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Splash />} />
+                <Route path="/voice-setup" element={<VoiceNavigationTimer />} />
                 <Route path="/accessibility" element={<AccessibilitySelection />} />
                 <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/dashboard" element={<Dashboard />} />

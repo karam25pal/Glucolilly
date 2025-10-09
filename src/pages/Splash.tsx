@@ -37,7 +37,7 @@ const Splash = () => {
       {/* CTA section takes ~38.2% */}
       <div className="flex-[0.382] flex flex-col items-center justify-start gap-phi-4 w-full max-w-md">
         <Button
-          onClick={() => navigate("/accessibility")}
+          onClick={() => navigate("/voice-setup")}
           size="lg"
           className="w-full min-h-touch text-lg font-semibold"
           aria-label="Select accessibility options to begin"
@@ -53,9 +53,9 @@ const Splash = () => {
         )}
 
         <button
-          onClick={() => navigate("/accessibility")}
+          onClick={() => navigate("/voice-setup")}
           className="text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded px-phi-2 py-phi-1 min-h-touch flex items-center"
-          aria-label="Skip to accessibility selection"
+          aria-label="Skip to voice navigation setup"
         >
           Continue →
         </button>
