@@ -54,7 +54,13 @@ export const MealImageAnalyzer = () => {
       if (error) throw error;
 
       if (data?.analysis) {
-        setAnalysis(data.analysis);
+        // Clean up markdown formatting
+        const cleanedAnalysis = data.analysis
+          .replace(/\*\*/g, '') // Remove bold markers
+          .replace(/^[\-\*]\s+/gm, '') // Remove leading bullets/dashes
+          .replace(/\*/g, ''); // Remove any remaining asterisks
+        
+        setAnalysis(cleanedAnalysis);
         toast.success("Meal analyzed successfully!");
       } else {
         throw new Error("No analysis received");
