@@ -76,33 +76,33 @@ export const MealImageAnalyzer = () => {
 
   return (
     <Card className="overflow-hidden">
-      <CardHeader className="bg-gradient-to-r from-primary/10 via-primary/5 to-accent">
-        <CardTitle className="text-2xl">AI Meal Analyzer</CardTitle>
-        <CardDescription>
+      <CardHeader className="bg-gradient-to-r from-primary/10 via-primary/5 to-accent p-phi-4 md:p-phi-5">
+        <CardTitle className="text-xl md:text-2xl">AI Meal Analyzer</CardTitle>
+        <CardDescription className="text-sm md:text-base">
           Upload or capture a photo of your meal for personalized diabetes-friendly suggestions
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="pt-phi-4">
+      <CardContent className="p-phi-3 md:p-phi-4 lg:p-phi-5">
         {!selectedImage ? (
-          <div className="space-y-phi-4">
-            <div className="grid grid-cols-2 gap-phi-3">
+          <div className="space-y-phi-3 md:space-y-phi-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-phi-3">
               <Button
                 onClick={() => cameraInputRef.current?.click()}
-                className="min-h-touch flex-col h-32"
+                className="min-h-touch h-24 sm:h-32 flex-col gap-phi-2"
                 variant="outline"
               >
-                <Camera className="h-8 w-8 mb-phi-2" />
-                <span>Take Photo</span>
+                <Camera className="h-6 w-6 sm:h-8 sm:w-8" />
+                <span className="text-sm sm:text-base">Take Photo</span>
               </Button>
 
               <Button
                 onClick={() => fileInputRef.current?.click()}
-                className="min-h-touch flex-col h-32"
+                className="min-h-touch h-24 sm:h-32 flex-col gap-phi-2"
                 variant="outline"
               >
-                <Upload className="h-8 w-8 mb-phi-2" />
-                <span>Upload Image</span>
+                <Upload className="h-6 w-6 sm:h-8 sm:w-8" />
+                <span className="text-sm sm:text-base">Upload Image</span>
               </Button>
             </div>
 
@@ -124,7 +124,7 @@ export const MealImageAnalyzer = () => {
             />
 
             <div className="bg-muted/30 p-phi-3 rounded-lg">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                 💡 <strong>Tip:</strong> Take clear photos of your meals for best results. 
                 The AI will analyze nutritional content and provide diabetes-friendly recommendations 
                 based on your health stats.
@@ -132,17 +132,17 @@ export const MealImageAnalyzer = () => {
             </div>
           </div>
         ) : (
-          <div className="space-y-phi-4">
+          <div className="space-y-phi-3 md:space-y-phi-4">
             <div className="relative rounded-lg overflow-hidden bg-muted">
               <img
                 src={selectedImage}
                 alt="Selected meal"
-                className="w-full h-auto max-h-96 object-contain"
+                className="w-full h-auto max-h-64 sm:max-h-80 md:max-h-96 object-contain"
               />
               <Button
                 variant="destructive"
                 size="icon"
-                className="absolute top-phi-2 right-phi-2"
+                className="absolute top-phi-2 right-phi-2 h-8 w-8 sm:h-10 sm:w-10"
                 onClick={handleReset}
               >
                 <X className="h-4 w-4" />
@@ -153,12 +153,12 @@ export const MealImageAnalyzer = () => {
               <Button
                 onClick={handleAnalyze}
                 disabled={isAnalyzing}
-                className="w-full min-h-touch"
+                className="w-full min-h-touch text-sm sm:text-base"
                 size="lg"
               >
                 {isAnalyzing ? (
                   <>
-                    <Loader2 className="h-5 w-5 mr-phi-2 animate-spin" />
+                    <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 mr-phi-2 animate-spin" />
                     Analyzing...
                   </>
                 ) : (
@@ -169,17 +169,17 @@ export const MealImageAnalyzer = () => {
               <div className="space-y-phi-3">
                 <div className="bg-gradient-to-br from-primary/5 to-accent/10 rounded-lg overflow-hidden">
                   {/* Header */}
-                  <div className="bg-primary/10 px-phi-4 py-phi-3 border-b border-primary/20">
+                  <div className="bg-primary/10 px-phi-3 sm:px-phi-4 py-phi-2 sm:py-phi-3 border-b border-primary/20">
                     <div className="flex items-center gap-phi-2">
-                      <CheckCircle2 className="h-5 w-5 text-primary" />
-                      <h3 className="text-lg font-bold text-primary">
+                      <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
+                      <h3 className="text-base sm:text-lg font-bold text-primary">
                         Analysis Complete
                       </h3>
                     </div>
                   </div>
 
                   {/* Content */}
-                  <div className="p-phi-4">
+                  <div className="p-phi-3 sm:p-phi-4">
                     {/* Parse and display structured analysis */}
                     {analysis.split('\n\n').map((section, idx) => {
                       const lines = section.split('\n').filter(line => line.trim());
@@ -197,11 +197,11 @@ export const MealImageAnalyzer = () => {
                         const items = hasSectionTitle ? lines.slice(1) : lines;
 
                         return (
-                          <div key={idx} className="mb-phi-4 last:mb-0">
+                          <div key={idx} className="mb-phi-3 sm:mb-phi-4 last:mb-0">
                             {hasSectionTitle && (
-                              <h4 className="font-semibold text-foreground mb-phi-2 flex items-center gap-phi-2">
-                                <Info className="h-4 w-4 text-primary" />
-                                {titleLine.replace(/[:#]/g, '').trim()}
+                              <h4 className="text-sm sm:text-base font-semibold text-foreground mb-phi-2 flex items-center gap-phi-2">
+                                <Info className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
+                                <span>{titleLine.replace(/[:#]/g, '').trim()}</span>
                               </h4>
                             )}
                             <div className="space-y-phi-2">
@@ -219,19 +219,19 @@ export const MealImageAnalyzer = () => {
                                 return (
                                   <div 
                                     key={itemIdx}
-                                    className="bg-background/60 backdrop-blur-sm rounded-lg px-phi-3 py-phi-2 border border-border/50"
+                                    className="bg-background/60 backdrop-blur-sm rounded-lg px-phi-2 sm:px-phi-3 py-phi-2 border border-border/50"
                                   >
                                     {labelMatch ? (
-                                      <div className="flex items-start justify-between gap-phi-3">
-                                        <span className="text-sm font-medium text-muted-foreground">
+                                      <div className="flex items-start justify-between gap-phi-2 sm:gap-phi-3">
+                                        <span className="text-xs sm:text-sm font-medium text-muted-foreground">
                                           {labelMatch[1]}
                                         </span>
-                                        <span className="text-sm text-foreground font-semibold text-right">
+                                        <span className="text-xs sm:text-sm text-foreground font-semibold text-right">
                                           {labelMatch[2]}
                                         </span>
                                       </div>
                                     ) : (
-                                      <p className="text-sm text-foreground leading-relaxed">
+                                      <p className="text-xs sm:text-sm text-foreground leading-relaxed">
                                         {cleanItem}
                                       </p>
                                     )}
@@ -245,7 +245,7 @@ export const MealImageAnalyzer = () => {
 
                       // Regular paragraph
                       return (
-                        <div key={idx} className="mb-phi-3 last:mb-0">
+                        <div key={idx} className="mb-phi-2 sm:mb-phi-3 last:mb-0">
                           {lines.map((line, lineIdx) => {
                             // Check if line is a heading (contains ":" or is short and bold-worthy)
                             const isHeading = line.includes(':') && line.length < 50;
@@ -254,7 +254,7 @@ export const MealImageAnalyzer = () => {
                             if (isHeading && rest.length > 0) {
                               return (
                                 <div key={lineIdx} className="mb-phi-2">
-                                  <p className="text-sm">
+                                  <p className="text-xs sm:text-sm">
                                     <span className="font-semibold text-primary">
                                       {heading}:
                                     </span>
@@ -267,7 +267,7 @@ export const MealImageAnalyzer = () => {
                             }
                             
                             return (
-                              <p key={lineIdx} className="text-sm text-foreground leading-relaxed mb-phi-1">
+                              <p key={lineIdx} className="text-xs sm:text-sm text-foreground leading-relaxed mb-phi-1">
                                 {line}
                               </p>
                             );
@@ -278,10 +278,10 @@ export const MealImageAnalyzer = () => {
                   </div>
 
                   {/* Footer tip */}
-                  <div className="bg-muted/30 px-phi-4 py-phi-3 border-t border-border/50">
+                  <div className="bg-muted/30 px-phi-3 sm:px-phi-4 py-phi-2 sm:py-phi-3 border-t border-border/50">
                     <div className="flex items-start gap-phi-2">
-                      <AlertCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                      <p className="text-xs text-muted-foreground">
+                      <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 text-primary mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-muted-foreground leading-relaxed">
                         These are AI-generated estimates. For precise nutritional information, 
                         consult with your healthcare provider or a registered dietitian.
                       </p>
@@ -292,7 +292,7 @@ export const MealImageAnalyzer = () => {
                 <Button
                   variant="outline"
                   onClick={handleReset}
-                  className="w-full min-h-touch"
+                  className="w-full min-h-touch text-sm sm:text-base"
                 >
                   Analyze Another Meal
                 </Button>
