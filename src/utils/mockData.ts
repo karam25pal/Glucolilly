@@ -5,29 +5,36 @@ export const generateMockMetrics = (): HealthMetric[] => {
   const now = new Date();
 
   // Generate glucose readings (2-3 per day for last 14 days)
+  // Create a trend showing improvement: higher values in past weeks, lower in recent week
   for (let day = 0; day < 14; day++) {
     const date = new Date(now);
     date.setDate(date.getDate() - day);
     
-    // Morning reading
+    // Calculate improvement factor: older data has higher glucose values
+    // Days 14-8: higher baseline (showing worse control)
+    // Days 7-0: lower baseline (showing improvement)
+    const improvementFactor = day > 7 ? 1.2 : 0.85;
+    const baseGlucose = 110 * improvementFactor;
+    
+    // Morning reading (fasting)
     const morningDate = new Date(date);
     morningDate.setHours(7, 30, 0, 0);
     metrics.push({
       id: `glucose-morning-${day}`,
       timestamp: morningDate.toISOString(),
       type: "glucose",
-      value: 90 + Math.random() * 40,
+      value: baseGlucose + Math.random() * 20 - 10,
       unit: "mg/dL",
     });
 
-    // Afternoon reading
+    // Afternoon reading (post-lunch)
     const afternoonDate = new Date(date);
     afternoonDate.setHours(14, 0, 0, 0);
     metrics.push({
       id: `glucose-afternoon-${day}`,
       timestamp: afternoonDate.toISOString(),
       type: "glucose",
-      value: 100 + Math.random() * 50,
+      value: (baseGlucose + 30) + Math.random() * 25 - 12,
       unit: "mg/dL",
     });
 
@@ -38,7 +45,7 @@ export const generateMockMetrics = (): HealthMetric[] => {
       id: `glucose-evening-${day}`,
       timestamp: eveningDate.toISOString(),
       type: "glucose",
-      value: 95 + Math.random() * 45,
+      value: (baseGlucose + 15) + Math.random() * 20 - 10,
       unit: "mg/dL",
     });
   }
