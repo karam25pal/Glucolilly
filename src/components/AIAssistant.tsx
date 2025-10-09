@@ -18,17 +18,8 @@ interface AIAssistantProps {
 
 const AIAssistant = ({ onClose }: AIAssistantProps) => {
   const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "Hello! 👋 How can I help you with your diabetes management today?" }
+    { role: "assistant", content: "Hello! 👋 I'm your GlucoLilly AI assistant. How can I help you with your diabetes management today?" }
   ]);
-  const [userId] = useState(() => {
-    // Generate or get persistent user ID
-    let id = localStorage.getItem('glucolilly-user-id');
-    if (!id) {
-      id = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      localStorage.setItem('glucolilly-user-id', id);
-    }
-    return id;
-  });
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -93,7 +84,6 @@ const AIAssistant = ({ onClose }: AIAssistantProps) => {
 
   const handleVoiceInput = async () => {
     if (isRecording) {
-      // Stop recording
       mediaRecorderRef.current?.stop();
       setIsRecording(false);
       return;
@@ -209,6 +199,9 @@ const AIAssistant = ({ onClose }: AIAssistantProps) => {
     setIsLoading(true);
 
     try {
+      // Generate user ID from profile name for demo (in production, use auth)
+      const userId = profile?.name ? `user_${profile.name.toLowerCase().replace(/\s+/g, '_')}` : 'demo_user';
+      
       const userContext = {
         profile,
         weeklyStats,
@@ -238,7 +231,7 @@ const AIAssistant = ({ onClose }: AIAssistantProps) => {
       } else {
         toast.error("Failed to get response. Please try again.");
       }
-      setMessages(prev => prev.slice(0, -1)); // Remove user message on error
+      setMessages(prev => prev.slice(0, -1));
     } finally {
       setIsLoading(false);
     }
@@ -248,8 +241,8 @@ const AIAssistant = ({ onClose }: AIAssistantProps) => {
     <Card className="fixed bottom-phi-4 right-phi-4 w-96 h-[600px] flex flex-col shadow-2xl z-50 animate-slide-up">
       <div className="flex items-center justify-between p-phi-4 border-b border-border bg-primary text-primary-foreground">
         <div>
-          <h3 className="font-bold text-lg">AI Health Coach</h3>
-          <p className="text-xs opacity-90">Your personalized guide 🌟</p>
+          <h3 className="font-bold text-lg">AI Assistant</h3>
+          <p className="text-xs opacity-90">Learning from your conversations 🤖</p>
         </div>
         <div className="flex gap-phi-2">
           <Button

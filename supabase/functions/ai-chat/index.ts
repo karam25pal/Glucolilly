@@ -23,10 +23,7 @@ serve(async (req) => {
     }
 
     // Initialize Supabase client
-    const supabase = createClient(
-      SUPABASE_URL!,
-      SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
     // Get recent chat history for context (last 20 messages)
     const { data: chatHistory } = await supabase
@@ -149,30 +146,9 @@ Be concise, actionable, and supportive.`;
           content: assistantMessage
         }
       ]);
-    }
 
-    // Extract and update preferences from conversation
-    // This is a simple keyword-based extraction - in production you'd use more sophisticated NLP
-    const messageText = `${userMessage?.content || ''} ${assistantMessage}`.toLowerCase();
-    
-    const updatesNeeded: any = {};
-    
-    // Check for food preferences
-    if (messageText.includes('love') || messageText.includes('favorite') || messageText.includes('enjoy')) {
-      // Would implement more sophisticated food extraction here
-    }
-    
-    // Check for exercise preferences
-    if (messageText.includes('exercise') || messageText.includes('workout') || messageText.includes('activity')) {
-      // Would implement more sophisticated exercise extraction here
-    }
-
-    // Update preferences if we learned something new
-    if (Object.keys(updatesNeeded).length > 0) {
-      await supabase.from('user_preferences').upsert({
-        user_id: userId || 'guest',
-        ...updatesNeeded
-      });
+      // Analyze and update preferences
+      await analyzeAndUpdatePreferences(supabase, userId || 'guest', userMessage.content, assistantMessage);
     }
     
     return new Response(
@@ -189,3 +165,88 @@ Be concise, actionable, and supportive.`;
     );
   }
 });
+
+// Helper function to analyze conversations and update user preferences
+async function analyzeAndUpdatePreferences(supabase: any, userId: string, userMessage: string, assistantMessage: string) {
+  try {
+    const lowerUserMsg = userMessage.toLowerCase();
+    
+    // Simple keyword extraction for preferences
+    const foodKeywords = ['love', 'like', 'enjoy', 'favorite', 'prefer', 'hate', 'dislike', "can't stand"];
+    const exerciseKeywords = ['workout', 'exercise', 'walk', 'run', 'swim', 'yoga', 'gym'];
+    const challengeKeywords = ['struggle', 'hard', 'difficult', 'challenge', 'problem'];
+    const successKeywords = ['works', 'helped', 'better', 'improved', 'success'];
+
+    const updates: Record<string, string[]> = {};
+    
+    // Check for food preferences
+    for (const keyword of foodKeywords) {
+      if (lowerUserMsg.includes(keyword)) {
+        const words = userMessage.split(' ');
+        const keywordIndex = words.findIndex(w => w.toLowerCase().includes(keyword));
+        if (keywordIndex >= 0 && keywordIndex < words.length - 1) {
+          const potentialFood = words.slice(keywordIndex + 1, keywordIndex + 4).join(' ');
+          
+          if (['love', 'like', 'enjoy', 'favorite', 'prefer'].some(k => keyword.includes(k))) {
+            if (!updates.favorite_foods) updates.favorite_foods = [];
+            updates.favorite_foods.push(potentialFood);
+          } else {
+            if (!updates.disliked_foods) updates.disliked_foods = [];
+            updates.disliked_foods.push(potentialFood);
+          }
+        }
+      }
+    }
+
+    // Check for exercise preferences
+    if (exerciseKeywords.some(k => lowerUserMsg.includes(k))) {
+      const exerciseMatch = exerciseKeywords.find(k => lowerUserMsg.includes(k));
+      if (exerciseMatch) {
+        updates.exercise_preferences = [exerciseMatch];
+      }
+    }
+
+    // Check for challenges
+    if (challengeKeywords.some(k => lowerUserMsg.includes(k))) {
+      updates.common_challenges = [userMessage.substring(0, 100)];
+    }
+
+    // Check for successful strategies
+    if (successKeywords.some(k => lowerUserMsg.includes(k))) {
+      updates.successful_strategies = [userMessage.substring(0, 100)];
+    }
+
+    // Only update if we found something
+    if (Object.keys(updates).length > 0) {
+      const { data: existing } = await supabase
+        .from('user_preferences')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (existing) {
+        // Merge with existing
+        for (const [key, value] of Object.entries(updates)) {
+          if (Array.isArray(existing[key])) {
+            updates[key] = [...new Set([...existing[key] as string[], ...value])].slice(-10);
+          }
+        }
+        
+        await supabase
+          .from('user_preferences')
+          .update(updates)
+          .eq('user_id', userId);
+      } else {
+        // Create new
+        await supabase
+          .from('user_preferences')
+          .insert({
+            user_id: userId,
+            ...updates
+          });
+      }
+    }
+  } catch (error) {
+    console.error('Error updating preferences:', error);
+  }
+}
