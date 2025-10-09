@@ -8,6 +8,15 @@ import { Moon, Sun } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { MealImageAnalyzer } from "@/components/MealImageAnalyzer";
+import grilledChickenImg from "@/assets/grilled-chicken-salad.jpg";
+import yogurtParfaitImg from "@/assets/yogurt-parfait.jpg";
+import lentilSoupImg from "@/assets/lentil-soup.jpg";
+
+const recipeImages: Record<string, string> = {
+  "grilled-chicken-salad.jpg": grilledChickenImg,
+  "yogurt-parfait.jpg": yogurtParfaitImg,
+  "lentil-soup.jpg": lentilSoupImg,
+};
 
 const Diet = () => {
   const navigate = useNavigate();
@@ -66,18 +75,32 @@ const Diet = () => {
             {/* Recipe Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-phi-4">
             {recipes.map((recipe) => (
-              <Card key={recipe.id} className="p-phi-4 hover:shadow-lg transition-shadow">
-                <div className="flex items-start justify-between mb-phi-3">
-                  <h3 className="text-xl font-bold text-foreground">{recipe.name}</h3>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handlePlayAudio(recipe.name)}
-                    aria-label={`Play audio for ${recipe.name}`}
-                  >
-                    <Volume2 className="h-5 w-5 text-primary" />
-                  </Button>
-                </div>
+              <Card key={recipe.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                {recipe.image && recipeImages[recipe.image] && (
+                  <div className="relative h-48 overflow-hidden">
+                    <img 
+                      src={recipeImages[recipe.image]} 
+                      alt={recipe.name}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute top-phi-2 right-phi-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="bg-background/80 backdrop-blur"
+                        onClick={() => handlePlayAudio(recipe.name)}
+                        aria-label={`Play audio for ${recipe.name}`}
+                      >
+                        <Volume2 className="h-5 w-5 text-primary" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="p-phi-4">
+                  <div className="flex items-start justify-between mb-phi-3">
+                    <h3 className="text-xl font-bold text-foreground">{recipe.name}</h3>
+                  </div>
 
                 <div className="flex flex-wrap gap-phi-2 mb-phi-3">
                   <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
@@ -107,12 +130,23 @@ const Diet = () => {
                 >
                   View Recipe
                 </Button>
+                </div>
               </Card>
             ))}
             </div>
           </>
         ) : (
           <Card className="p-phi-5 max-w-3xl mx-auto">
+            {recipe!.image && recipeImages[recipe!.image] && (
+              <div className="relative h-64 overflow-hidden rounded-lg mb-phi-4">
+                <img 
+                  src={recipeImages[recipe!.image]} 
+                  alt={recipe!.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+            
             <div className="flex items-start justify-between mb-phi-4">
               <h2 className="text-3xl font-bold text-primary">{recipe!.name}</h2>
               <Button

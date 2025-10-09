@@ -138,6 +138,7 @@ export const recipes = [
     protein: 38,
     fiber: 6,
     prepTime: "30 min",
+    image: "grilled-chicken-salad.jpg",
     ingredients: [
       "150g chicken breast",
       "1/2 cup quinoa",
@@ -161,6 +162,7 @@ export const recipes = [
     protein: 20,
     fiber: 5,
     prepTime: "10 min",
+    image: "yogurt-parfait.jpg",
     ingredients: [
       "200g Greek yogurt (low-fat)",
       "1/2 cup berries",
@@ -184,6 +186,7 @@ export const recipes = [
     protein: 18,
     fiber: 12,
     prepTime: "45 min",
+    image: "lentil-soup.jpg",
     ingredients: [
       "1 cup lentils",
       "Mixed vegetables (carrots, celery, spinach)",
