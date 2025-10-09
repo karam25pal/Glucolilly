@@ -90,7 +90,7 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar collapsible="icon" className={isCollapsed ? "w-14" : "w-64 lg:w-72"}>
+    <Sidebar collapsible="icon" className={`bg-white dark:bg-background ${isCollapsed ? "w-14" : "w-64 lg:w-72"}`}>
       <SidebarHeader className="border-b border-border p-phi-2 sm:p-phi-3">
         {!isCollapsed && (
           <div className="flex items-center gap-phi-2">
