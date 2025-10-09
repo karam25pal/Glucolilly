@@ -8,7 +8,7 @@ import { useUser } from "@/contexts/UserContext";
 import { MetricsInput } from "@/components/MetricsInput";
 import { DiabetesReportGenerator } from "@/components/DiabetesReportGenerator";
 import { useNavigate } from "react-router-dom";
-import { generateMockMetrics } from "@/utils/mockData";
+import { generatePersonalizedMockMetrics } from "@/utils/mockData";
 import { toast } from "sonner";
 
 const Dashboard = () => {
@@ -20,9 +20,9 @@ const Dashboard = () => {
   // Load demo data if no metrics exist (only once)
   useEffect(() => {
     const hasLoadedDemo = localStorage.getItem('demo-data-loaded');
-    if (metrics.length === 0 && !hasLoadedDemo) {
-      const demoMetrics = generateMockMetrics();
-      demoMetrics.forEach(metric => {
+    if (metrics.length === 0 && !hasLoadedDemo && profile) {
+      const personalizedMetrics = generatePersonalizedMockMetrics(profile, metrics);
+      personalizedMetrics.forEach(metric => {
         addMetric({
           type: metric.type,
           value: metric.value,
@@ -33,9 +33,9 @@ const Dashboard = () => {
         });
       });
       localStorage.setItem('demo-data-loaded', 'true');
-      toast.success("Demo data loaded for testing");
+      toast.success("Personalized demo data generated based on your profile");
     }
-  }, []);
+  }, [profile]);
 
   const latestGlucose = metrics.find(m => m.type === "glucose");
   const todaySteps = metrics.find(m => m.type === "steps");

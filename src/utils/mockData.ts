@@ -1,40 +1,89 @@
-import { HealthMetric } from "@/contexts/UserContext";
+import { HealthMetric, UserProfile } from "@/contexts/UserContext";
 
-export const generateMockMetrics = (): HealthMetric[] => {
+export const generatePersonalizedMockMetrics = (
+  profile: UserProfile | null,
+  existingMetrics: HealthMetric[]
+): HealthMetric[] => {
   const metrics: HealthMetric[] = [];
   const now = new Date();
 
-  // Generate glucose readings (2-3 per day for last 14 days)
-  // Create a trend showing improvement: higher values in past weeks, lower in recent week
+  // Analyze existing user patterns
+  const recentGlucose = existingMetrics
+    .filter(m => m.type === "glucose")
+    .slice(0, 10);
+  const avgRecentGlucose = recentGlucose.length > 0
+    ? recentGlucose.reduce((sum, m) => sum + m.value, 0) / recentGlucose.length
+    : null;
+
+  const userMeals = existingMetrics
+    .filter(m => m.type === "meal")
+    .map(m => m.mealDetails?.name)
+    .filter(Boolean);
+
+  const userExercises = existingMetrics
+    .filter(m => m.type === "exercise")
+    .map(m => m.exerciseDetails?.activity)
+    .filter(Boolean);
+
+  // Determine baseline glucose based on user profile and history
+  const getBaselineGlucose = () => {
+    if (avgRecentGlucose) return avgRecentGlucose;
+    
+    // Base on diabetes type if no history
+    switch (profile?.diabetesType) {
+      case "type1":
+        return 140;
+      case "type2":
+        return 130;
+      case "gestational":
+        return 115;
+      case "prediabetic":
+        return 110;
+      default:
+        return 120;
+    }
+  };
+
+  const baseGlucose = getBaselineGlucose();
+
+  // Generate glucose readings showing personalized trends
   for (let day = 0; day < 14; day++) {
     const date = new Date(now);
     date.setDate(date.getDate() - day);
     
-    // Calculate improvement factor: older data has higher glucose values
-    // Days 14-8: higher baseline (showing worse control)
-    // Days 7-0: lower baseline (showing improvement)
-    const improvementFactor = day > 7 ? 1.2 : 0.85;
-    const baseGlucose = 110 * improvementFactor;
+    // Create improvement trend: older data worse, recent data better
+    // If user has been logging data, show positive trend
+    const hasUserEngagement = existingMetrics.length > 5;
+    const improvementFactor = hasUserEngagement
+      ? (day > 7 ? 1.15 : 0.88)  // Show improvement if engaged
+      : (day > 7 ? 1.08 : 0.95); // Smaller improvement if not engaged
+    
+    const dayBaseGlucose = baseGlucose * improvementFactor;
+    
+    // Add variation based on BMI if available
+    const bmiAdjustment = profile?.bmi 
+      ? (profile.bmi > 25 ? 5 : profile.bmi < 20 ? -5 : 0)
+      : 0;
     
     // Morning reading (fasting)
     const morningDate = new Date(date);
     morningDate.setHours(7, 30, 0, 0);
     metrics.push({
-      id: `glucose-morning-${day}`,
+      id: `glucose-morning-${day}-${Date.now()}`,
       timestamp: morningDate.toISOString(),
       type: "glucose",
-      value: baseGlucose + Math.random() * 20 - 10,
+      value: dayBaseGlucose + bmiAdjustment + (Math.random() * 20 - 10),
       unit: "mg/dL",
     });
 
-    // Afternoon reading (post-lunch)
+    // Afternoon reading (post-lunch, typically higher)
     const afternoonDate = new Date(date);
     afternoonDate.setHours(14, 0, 0, 0);
     metrics.push({
-      id: `glucose-afternoon-${day}`,
+      id: `glucose-afternoon-${day}-${Date.now()}`,
       timestamp: afternoonDate.toISOString(),
       type: "glucose",
-      value: (baseGlucose + 30) + Math.random() * 25 - 12,
+      value: (dayBaseGlucose + 25) + bmiAdjustment + (Math.random() * 25 - 12),
       unit: "mg/dL",
     });
 
@@ -42,23 +91,35 @@ export const generateMockMetrics = (): HealthMetric[] => {
     const eveningDate = new Date(date);
     eveningDate.setHours(20, 0, 0, 0);
     metrics.push({
-      id: `glucose-evening-${day}`,
+      id: `glucose-evening-${day}-${Date.now()}`,
       timestamp: eveningDate.toISOString(),
       type: "glucose",
-      value: (baseGlucose + 15) + Math.random() * 20 - 10,
+      value: (dayBaseGlucose + 15) + bmiAdjustment + (Math.random() * 20 - 10),
       unit: "mg/dL",
     });
   }
 
-  // Generate meals (3 per day for last 7 days)
-  const meals = [
+  // Generate meals based on user's preferred foods or defaults
+  const defaultMeals = [
     "Oatmeal with berries",
     "Grilled chicken salad",
     "Brown rice with vegetables",
     "Greek yogurt with nuts",
     "Salmon with quinoa",
     "Lentil soup",
+    "Scrambled eggs with spinach",
+    "Turkey wrap with vegetables",
+    "Stir-fried tofu",
   ];
+
+  const mealPool = userMeals.length > 3 
+    ? [...new Set([...userMeals, ...defaultMeals])] as string[]
+    : defaultMeals;
+
+  // Calorie baseline based on weight and height
+  const baseCalories = profile?.weight && profile?.height
+    ? Math.round((profile.weight * 10 + profile.height * 6.25 - profile.age * 5 + 5) / 3)
+    : 450;
 
   for (let day = 0; day < 7; day++) {
     const date = new Date(now);
@@ -67,65 +128,83 @@ export const generateMockMetrics = (): HealthMetric[] => {
     [8, 13, 19].forEach((hour, idx) => {
       const mealDate = new Date(date);
       mealDate.setHours(hour, 0, 0, 0);
+      const mealName = mealPool[Math.floor(Math.random() * mealPool.length)];
+      const calories = baseCalories + (Math.random() * 200 - 100);
+      
       metrics.push({
-        id: `meal-${day}-${idx}`,
+        id: `meal-${day}-${idx}-${Date.now()}`,
         timestamp: mealDate.toISOString(),
         type: "meal",
-        value: 300 + Math.random() * 400,
+        value: calories,
         unit: "kcal",
         mealDetails: {
-          name: meals[Math.floor(Math.random() * meals.length)],
-          carbs: 30 + Math.random() * 40,
-          calories: 300 + Math.random() * 400,
+          name: mealName,
+          carbs: Math.round(calories * 0.15 + Math.random() * 30),
+          calories: Math.round(calories),
         },
       });
     });
   }
 
-  // Generate exercise (4-5 times per week)
-  const exercises = [
+  // Generate exercise based on user patterns
+  const defaultExercises = [
     { activity: "Brisk walking", intensity: "moderate" },
     { activity: "Swimming", intensity: "moderate" },
     { activity: "Cycling", intensity: "moderate" },
     { activity: "Yoga", intensity: "light" },
     { activity: "Strength training", intensity: "moderate" },
+    { activity: "Dancing", intensity: "moderate" },
+    { activity: "Jogging", intensity: "vigorous" },
   ];
 
+  const exercisePool = userExercises.length > 2
+    ? [...new Set([...userExercises.map(e => ({ activity: e, intensity: "moderate" })), ...defaultExercises])]
+    : defaultExercises;
+
+  // Exercise frequency based on user engagement
+  const exerciseFrequency = existingMetrics.filter(m => m.type === "exercise").length > 3 
+    ? 0.5  // More frequent if user exercises
+    : 0.35; // Less frequent otherwise
+
   for (let day = 0; day < 14; day++) {
-    if (Math.random() > 0.4) {
+    if (Math.random() < exerciseFrequency) {
       const date = new Date(now);
       date.setDate(date.getDate() - day);
       date.setHours(17, 0, 0, 0);
       
-      const exercise = exercises[Math.floor(Math.random() * exercises.length)];
+      const exercise = exercisePool[Math.floor(Math.random() * exercisePool.length)];
       const duration = 20 + Math.random() * 40;
       
       metrics.push({
-        id: `exercise-${day}`,
+        id: `exercise-${day}-${Date.now()}`,
         timestamp: date.toISOString(),
         type: "exercise",
         value: duration,
         unit: "minutes",
         exerciseDetails: {
-          activity: exercise.activity,
+          activity: typeof exercise === 'string' ? exercise : exercise.activity,
           duration: duration,
-          intensity: exercise.intensity,
+          intensity: typeof exercise === 'string' ? "moderate" : exercise.intensity,
         },
       });
     }
   }
 
-  // Generate steps (daily for last 7 days)
+  // Generate steps based on activity level
+  const baseSteps = existingMetrics.some(m => m.type === "exercise")
+    ? 6500 // Higher baseline if user exercises
+    : 5000; // Lower baseline otherwise
+
   for (let day = 0; day < 7; day++) {
     const date = new Date(now);
     date.setDate(date.getDate() - day);
     date.setHours(22, 0, 0, 0);
     
     metrics.push({
-      id: `steps-${day}`,
+      id: `steps-${day}-${Date.now()}`,
       timestamp: date.toISOString(),
       type: "steps",
-      value: 5000 + Math.random() * 5000,
+      value: baseSteps + Math.random() * 4000,
       unit: "steps",
     });
   }
