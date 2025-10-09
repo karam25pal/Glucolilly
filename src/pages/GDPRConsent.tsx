@@ -26,7 +26,7 @@ const GDPRConsent = () => {
     }));
 
     toast.success("Thank you for accepting our terms");
-    navigate('/');
+    navigate('/accessibility');
   };
 
   const handleDecline = () => {
