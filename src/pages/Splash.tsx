@@ -74,7 +74,7 @@ const Splash = () => {
 
         if (error) throw error;
 
-        const transcript = data.text.toLowerCase().trim();
+        const transcript = (data?.transcription || data?.text || "").toLowerCase().trim();
         console.log("Transcript:", transcript);
         
         if (transcript.includes("yes") || transcript.includes("yeah") || transcript.includes("sure")) {
@@ -139,30 +139,17 @@ const Splash = () => {
         </Button>
 
         {showVoicePrompt && (
-          <div className="flex flex-col items-center gap-phi-3 animate-slide-up">
-            <div className="flex items-center gap-phi-2 text-muted-foreground">
-              {isListening ? (
-                <>
-                  <Mic className="h-5 w-5 animate-pulse text-primary" aria-hidden="true" />
-                  <span className="text-sm">Listening...</span>
-                </>
-              ) : (
-                <>
-                  <Volume2 className="h-5 w-5" aria-hidden="true" />
-                  <span className="text-sm">Would you like to start onboarding?</span>
-                </>
-              )}
-            </div>
-            {!isListening && (
-              <Button
-                onClick={startListening}
-                size="sm"
-                variant="outline"
-                className="min-h-touch"
-              >
-                <Mic className="mr-2 h-4 w-4" />
-                Tap to Respond
-              </Button>
+          <div className="flex items-center gap-phi-2 text-muted-foreground animate-slide-up">
+            {isListening ? (
+              <>
+                <Mic className="h-5 w-5 animate-pulse text-primary" aria-hidden="true" />
+                <span className="text-sm">Listening...</span>
+              </>
+            ) : (
+              <>
+                <Volume2 className="h-5 w-5" aria-hidden="true" />
+                <span className="text-sm">Would you like to start onboarding?</span>
+              </>
             )}
           </div>
         )}
