@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Camera, Upload, X, Loader2 } from "lucide-react";
+import { Camera, Upload, X, Loader2, CheckCircle2, AlertCircle, Info } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -167,12 +167,125 @@ export const MealImageAnalyzer = () => {
               </Button>
             ) : (
               <div className="space-y-phi-3">
-                <div className="bg-gradient-to-br from-primary/5 to-accent p-phi-4 rounded-lg">
-                  <h3 className="text-lg font-bold text-primary mb-phi-2">
-                    AI Analysis Results
-                  </h3>
-                  <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap">
-                    {analysis}
+                <div className="bg-gradient-to-br from-primary/5 to-accent/10 rounded-lg overflow-hidden">
+                  {/* Header */}
+                  <div className="bg-primary/10 px-phi-4 py-phi-3 border-b border-primary/20">
+                    <div className="flex items-center gap-phi-2">
+                      <CheckCircle2 className="h-5 w-5 text-primary" />
+                      <h3 className="text-lg font-bold text-primary">
+                        Analysis Complete
+                      </h3>
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-phi-4">
+                    {/* Parse and display structured analysis */}
+                    {analysis.split('\n\n').map((section, idx) => {
+                      const lines = section.split('\n').filter(line => line.trim());
+                      if (lines.length === 0) return null;
+
+                      // Check if this is a numbered/bulleted list section
+                      const hasListItems = lines.some(line => 
+                        /^[\d]+\./.test(line.trim()) || /^[•\-\*]/.test(line.trim())
+                      );
+
+                      if (hasListItems) {
+                        // Get section title (first line if it doesn't start with number/bullet)
+                        const titleLine = lines[0];
+                        const hasSectionTitle = !/^[\d]+\./.test(titleLine) && !/^[•\-\*]/.test(titleLine);
+                        const items = hasSectionTitle ? lines.slice(1) : lines;
+
+                        return (
+                          <div key={idx} className="mb-phi-4 last:mb-0">
+                            {hasSectionTitle && (
+                              <h4 className="font-semibold text-foreground mb-phi-2 flex items-center gap-phi-2">
+                                <Info className="h-4 w-4 text-primary" />
+                                {titleLine.replace(/[:#]/g, '').trim()}
+                              </h4>
+                            )}
+                            <div className="space-y-phi-2">
+                              {items.map((item, itemIdx) => {
+                                const cleanItem = item
+                                  .replace(/^[\d]+\.\s*/, '')
+                                  .replace(/^[•\-\*]\s*/, '')
+                                  .trim();
+                                
+                                if (!cleanItem) return null;
+
+                                // Check if item contains a label (e.g., "Carbs: 45g")
+                                const labelMatch = cleanItem.match(/^([^:]+):\s*(.+)$/);
+                                
+                                return (
+                                  <div 
+                                    key={itemIdx}
+                                    className="bg-background/60 backdrop-blur-sm rounded-lg px-phi-3 py-phi-2 border border-border/50"
+                                  >
+                                    {labelMatch ? (
+                                      <div className="flex items-start justify-between gap-phi-3">
+                                        <span className="text-sm font-medium text-muted-foreground">
+                                          {labelMatch[1]}
+                                        </span>
+                                        <span className="text-sm text-foreground font-semibold text-right">
+                                          {labelMatch[2]}
+                                        </span>
+                                      </div>
+                                    ) : (
+                                      <p className="text-sm text-foreground leading-relaxed">
+                                        {cleanItem}
+                                      </p>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      // Regular paragraph
+                      return (
+                        <div key={idx} className="mb-phi-3 last:mb-0">
+                          {lines.map((line, lineIdx) => {
+                            // Check if line is a heading (contains ":" or is short and bold-worthy)
+                            const isHeading = line.includes(':') && line.length < 50;
+                            const [heading, ...rest] = line.split(':');
+                            
+                            if (isHeading && rest.length > 0) {
+                              return (
+                                <div key={lineIdx} className="mb-phi-2">
+                                  <p className="text-sm">
+                                    <span className="font-semibold text-primary">
+                                      {heading}:
+                                    </span>
+                                    <span className="text-foreground ml-1">
+                                      {rest.join(':').trim()}
+                                    </span>
+                                  </p>
+                                </div>
+                              );
+                            }
+                            
+                            return (
+                              <p key={lineIdx} className="text-sm text-foreground leading-relaxed mb-phi-1">
+                                {line}
+                              </p>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Footer tip */}
+                  <div className="bg-muted/30 px-phi-4 py-phi-3 border-t border-border/50">
+                    <div className="flex items-start gap-phi-2">
+                      <AlertCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-muted-foreground">
+                        These are AI-generated estimates. For precise nutritional information, 
+                        consult with your healthcare provider or a registered dietitian.
+                      </p>
+                    </div>
                   </div>
                 </div>
 
