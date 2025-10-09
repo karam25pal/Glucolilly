@@ -79,10 +79,10 @@ const Dashboard = () => {
           
           <div className="flex gap-phi-2 flex-shrink-0">
             <Button
-              variant="outline"
+              variant="default"
               size="icon"
               onClick={handleExportReport}
-              className="min-h-touch min-w-touch"
+              className="min-h-touch min-w-touch bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20"
               aria-label="Export weekly report"
             >
               <Download className="h-4 w-4 sm:h-5 sm:w-5" />
