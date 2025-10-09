@@ -1,118 +1,348 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { X, Send, Volume2 } from "lucide-react";
+import { X, Send, Mic, MicOff, Camera } from "lucide-react";
+import { useUser } from "@/contexts/UserContext";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+}
 
 interface AIAssistantProps {
   onClose: () => void;
 }
 
 const AIAssistant = ({ onClose }: AIAssistantProps) => {
-  const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant', content: string }>>([
-    {
-      role: 'assistant',
-      content: 'Hello! I\'m your DiaLife AI coach. How can I help you today? Feel free to ask about meals, exercise, or your health data.'
-    }
+  const [messages, setMessages] = useState<Message[]>([
+    { role: "assistant", content: "Waheguru ji! 🙏 How can I help you with your diabetes management today?" }
   ]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recognitionRef = useRef<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const { profile, weeklyStats } = useUser();
 
-  const handleSend = () => {
-    if (!message.trim()) return;
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
-    setMessages(prev => [...prev, { role: 'user', content: message }]);
+  // Initialize voice activation
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = false;
+
+      recognitionRef.current.onresult = (event: any) => {
+        const transcript = event.results[event.results.length - 1][0].transcript;
+        if (transcript.toLowerCase().includes('hey glucolilly') || 
+            transcript.toLowerCase().includes('glucolilly')) {
+          toast.success("Voice activated! Listening...");
+          handleVoiceInput();
+        }
+      };
+
+      recognitionRef.current.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+      };
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
+
+  const toggleVoiceActivation = () => {
+    if (!recognitionRef.current) {
+      toast.error("Voice recognition not supported in this browser");
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+      toast.info("Voice activation disabled");
+    } else {
+      recognitionRef.current.start();
+      setIsListening(true);
+      toast.success("Voice activation enabled! Say 'Hey GlucoLilly' to start");
+    }
+  };
+
+  const handleVoiceInput = async () => {
+    if (isRecording) {
+      // Stop recording
+      mediaRecorderRef.current?.stop();
+      setIsRecording(false);
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunksRef.current.push(event.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const reader = new FileReader();
+        
+        reader.onloadend = async () => {
+          const base64Audio = reader.result as string;
+          
+          try {
+            setIsLoading(true);
+            const { data, error } = await supabase.functions.invoke('speech-to-text', {
+              body: { audioBase64: base64Audio }
+            });
+
+            if (error) throw error;
+            
+            if (data?.transcription) {
+              setInput(data.transcription);
+              toast.success("Voice transcribed!");
+            }
+          } catch (error) {
+            console.error('Transcription error:', error);
+            toast.error("Failed to transcribe audio");
+          } finally {
+            setIsLoading(false);
+          }
+        };
+        
+        reader.readAsDataURL(audioBlob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      toast.success("Recording... Click again to stop");
+    } catch (error) {
+      console.error('Microphone access error:', error);
+      toast.error("Could not access microphone");
+    }
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error("Please upload an image file");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64Image = reader.result as string;
+      
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase.functions.invoke('analyze-meal-image', {
+          body: { 
+            imageBase64: base64Image,
+            diabetesType: profile?.diabetesType 
+          }
+        });
+
+        if (error) throw error;
+        
+        if (data?.analysis) {
+          const analysis = data.analysis;
+          const message = `📸 Meal Analysis:\n\n${analysis.mealName}\n\n` +
+            `Carbs: ${analysis.carbs}g | Calories: ${analysis.calories} | Protein: ${analysis.protein}g\n` +
+            `Glycemic Load: ${analysis.glycemicLoad}\n` +
+            `Compatibility: ${(analysis.compatibilityScore * 100).toFixed(0)}%\n\n` +
+            `${analysis.portions}\n\n` +
+            (analysis.alternatives?.length > 0 ? `Alternatives: ${analysis.alternatives.join(', ')}\n\n` : '') +
+            (analysis.notes || '');
+          
+          setMessages(prev => [...prev, 
+            { role: "user", content: "Analyze this meal photo" },
+            { role: "assistant", content: message }
+          ]);
+          toast.success("Meal analyzed!");
+        }
+      } catch (error) {
+        console.error('Image analysis error:', error);
+        toast.error("Failed to analyze image");
+      } finally {
+        setIsLoading(false);
+      }
+    };
     
-    // Simulate AI response
-    setTimeout(() => {
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: 'I understand you\'re interested in managing your diabetes better. Here are some personalized tips based on your profile...'
-      }]);
-    }, 1000);
+    reader.readAsDataURL(file);
+  };
 
-    setMessage("");
+  const sendMessage = async () => {
+    if (!input.trim() || isLoading) return;
+
+    const userMessage = input.trim();
+    setInput("");
+    setMessages(prev => [...prev, { role: "user", content: userMessage }]);
+    setIsLoading(true);
+
+    try {
+      const userContext = {
+        profile,
+        weeklyStats,
+      };
+
+      const { data, error } = await supabase.functions.invoke('ai-chat', {
+        body: { 
+          messages: [...messages, { role: "user", content: userMessage }],
+          userContext 
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.message) {
+        setMessages(prev => [...prev, { role: "assistant", content: data.message }]);
+      } else {
+        throw new Error("No response from AI");
+      }
+    } catch (error: any) {
+      console.error('Chat error:', error);
+      if (error.message?.includes('429')) {
+        toast.error("Rate limit exceeded. Please wait a moment and try again.");
+      } else if (error.message?.includes('402')) {
+        toast.error("AI credits exhausted. Please contact support.");
+      } else {
+        toast.error("Failed to get response. Please try again.");
+      }
+      setMessages(prev => prev.slice(0, -1)); // Remove user message on error
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-phi-4">
-      <Card className="w-full max-w-2xl max-h-[80vh] flex flex-col animate-slide-up">
-        {/* Header */}
-        <div className="flex items-center justify-between p-phi-4 border-b border-border">
-          <div className="flex items-center gap-phi-3">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-xl">🤖</span>
-            </div>
-            <div>
-              <h2 className="font-bold text-lg">AI Health Coach</h2>
-              <p className="text-xs text-muted-foreground">Always here to help</p>
-            </div>
-          </div>
-          
+    <Card className="fixed bottom-phi-4 right-phi-4 w-96 h-[600px] flex flex-col shadow-2xl z-50 animate-slide-up">
+      <div className="flex items-center justify-between p-phi-4 border-b border-border bg-primary text-primary-foreground">
+        <div>
+          <h3 className="font-bold text-lg">AI Assistant</h3>
+          <p className="text-xs opacity-90">Waheguru ji 🙏</p>
+        </div>
+        <div className="flex gap-phi-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleVoiceActivation}
+            className={`min-h-touch min-w-touch ${isListening ? 'bg-white/20' : ''}`}
+            aria-label={isListening ? "Disable voice activation" : "Enable voice activation"}
+          >
+            {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+          </Button>
           <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
             className="min-h-touch min-w-touch"
-            aria-label="Close AI Assistant"
+            aria-label="Close assistant"
           >
             <X className="h-5 w-5" />
           </Button>
         </div>
+      </div>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-phi-4 space-y-phi-3">
-          {messages.map((msg, idx) => (
+      <div className="flex-1 overflow-y-auto p-phi-4 space-y-phi-3">
+        {messages.map((message, idx) => (
+          <div
+            key={idx}
+            className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+          >
             <div
-              key={idx}
-              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`max-w-[80%] rounded-lg p-phi-3 ${
+                message.role === "user"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-foreground"
+              }`}
             >
-              <div
-                className={`max-w-[80%] p-phi-3 rounded-lg ${
-                  msg.role === 'user'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-foreground'
-                }`}
-              >
-                {msg.content}
-                {msg.role === 'assistant' && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="mt-phi-2 h-8"
-                    aria-label="Read message aloud"
-                  >
-                    <Volume2 className="h-4 w-4 mr-phi-1" />
-                    Read aloud
-                  </Button>
-                )}
-              </div>
+              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
             </div>
-          ))}
-        </div>
-
-        {/* Input */}
-        <div className="p-phi-4 border-t border-border">
-          <div className="flex gap-phi-2">
-            <Input
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Ask me anything about your health..."
-              className="flex-1 min-h-touch"
-              aria-label="Message input"
-            />
-            <Button
-              onClick={handleSend}
-              size="icon"
-              className="min-h-touch min-w-touch"
-              aria-label="Send message"
-            >
-              <Send className="h-5 w-5" />
-            </Button>
           </div>
+        ))}
+        {isLoading && (
+          <div className="flex justify-start">
+            <div className="bg-muted rounded-lg p-phi-3">
+              <p className="text-sm text-muted-foreground">Thinking...</p>
+            </div>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      <div className="p-phi-4 border-t border-border space-y-phi-2">
+        <div className="flex gap-phi-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+          />
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isLoading}
+            className="min-h-touch min-w-touch"
+            aria-label="Upload meal photo"
+          >
+            <Camera className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleVoiceInput}
+            disabled={isLoading}
+            className={`min-h-touch min-w-touch ${isRecording ? 'bg-primary text-primary-foreground' : ''}`}
+            aria-label={isRecording ? "Stop recording" : "Record voice"}
+          >
+            <Mic className="h-5 w-5" />
+          </Button>
+          <Input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+            placeholder="Ask me anything..."
+            disabled={isLoading}
+            className="flex-1 min-h-touch"
+          />
+          <Button
+            onClick={sendMessage}
+            disabled={!input.trim() || isLoading}
+            className="min-h-touch min-w-touch"
+            aria-label="Send message"
+          >
+            <Send className="h-5 w-5" />
+          </Button>
         </div>
-      </Card>
-    </div>
+        {isListening && (
+          <p className="text-xs text-muted-foreground text-center animate-pulse">
+            🎤 Listening for "Hey GlucoLilly"...
+          </p>
+        )}
+      </div>
+    </Card>
   );
 };
 
