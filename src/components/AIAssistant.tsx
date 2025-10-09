@@ -18,8 +18,17 @@ interface AIAssistantProps {
 
 const AIAssistant = ({ onClose }: AIAssistantProps) => {
   const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "Waheguru ji! 🙏 How can I help you with your diabetes management today?" }
+    { role: "assistant", content: "Hello! 👋 How can I help you with your diabetes management today?" }
   ]);
+  const [userId] = useState(() => {
+    // Generate or get persistent user ID
+    let id = localStorage.getItem('glucolilly-user-id');
+    if (!id) {
+      id = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('glucolilly-user-id', id);
+    }
+    return id;
+  });
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -208,7 +217,8 @@ const AIAssistant = ({ onClose }: AIAssistantProps) => {
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: { 
           messages: [...messages, { role: "user", content: userMessage }],
-          userContext 
+          userContext,
+          userId
         }
       });
 
@@ -238,8 +248,8 @@ const AIAssistant = ({ onClose }: AIAssistantProps) => {
     <Card className="fixed bottom-phi-4 right-phi-4 w-96 h-[600px] flex flex-col shadow-2xl z-50 animate-slide-up">
       <div className="flex items-center justify-between p-phi-4 border-b border-border bg-primary text-primary-foreground">
         <div>
-          <h3 className="font-bold text-lg">AI Assistant</h3>
-          <p className="text-xs opacity-90">Waheguru ji 🙏</p>
+          <h3 className="font-bold text-lg">AI Health Coach</h3>
+          <p className="text-xs opacity-90">Your personalized guide 🌟</p>
         </div>
         <div className="flex gap-phi-2">
           <Button
