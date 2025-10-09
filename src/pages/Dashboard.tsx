@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import AIAssistant from "@/components/AIAssistant";
 import { useUser } from "@/contexts/UserContext";
 import { MetricsInput } from "@/components/MetricsInput";
+import { DiabetesReportGenerator } from "@/components/DiabetesReportGenerator";
 import { useNavigate } from "react-router-dom";
 import { generateMockMetrics } from "@/utils/mockData";
 import { toast } from "sonner";
@@ -127,6 +128,11 @@ const Dashboard = () => {
               </div>
             </div>
           </Card>
+        </section>
+
+        {/* Professional Report Generator */}
+        <section className="mb-phi-5">
+          <DiabetesReportGenerator />
         </section>
 
         {/* Quick Stats */}
