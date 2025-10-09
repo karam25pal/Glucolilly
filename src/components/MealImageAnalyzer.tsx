@@ -214,19 +214,22 @@ export const MealImageAnalyzer = () => {
               </Button>
             ) : (
               <div className="space-y-phi-3">
-                <div className="bg-gradient-to-br from-primary/5 to-accent/10 rounded-lg overflow-hidden">
-                  {/* Header */}
-                  <div className="bg-primary/10 px-phi-3 sm:px-phi-4 py-phi-2 sm:py-phi-3 border-b border-primary/20">
-                    <div className="flex items-center gap-phi-2">
-                      <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
-                      <h3 className="text-base sm:text-lg font-bold text-primary">
-                        Analysis Complete
-                      </h3>
-                    </div>
-                  </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-phi-4">
+                  {/* Left: Visual Analysis */}
+                  <div className="lg:col-span-2">
+                    <div className="bg-gradient-to-br from-primary/5 to-accent/10 rounded-lg overflow-hidden">
+                      {/* Header */}
+                      <div className="bg-primary/10 px-phi-3 sm:px-phi-4 py-phi-2 sm:py-phi-3 border-b border-primary/20">
+                        <div className="flex items-center gap-phi-2">
+                          <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
+                          <h3 className="text-base sm:text-lg font-bold text-primary">
+                            Analysis Complete
+                          </h3>
+                        </div>
+                      </div>
 
-                  {/* Content */}
-                  <div className="p-phi-3 sm:p-phi-4 space-y-phi-4">
+                      {/* Content */}
+                      <div className="p-phi-3 sm:p-phi-4 space-y-phi-4">
                     {/* Extract and visualize key metrics */}
                     {(() => {
                       // Parse nutritional values from analysis
@@ -347,27 +350,35 @@ export const MealImageAnalyzer = () => {
                               )}
                             </div>
                           </div>
-
-                          {/* Brief Summary */}
-                          <div className="bg-muted/50 rounded-lg p-phi-3">
-                            <p className="text-xs sm:text-sm text-foreground leading-relaxed">
-                              {analysis.split('\n').find(line => line.length > 50 && !line.includes(':'))?.trim() || 
-                               'This meal has been analyzed based on your diabetes profile.'}
-                            </p>
-                          </div>
                         </>
                       );
                     })()}
+                      </div>
+
+                      {/* Footer tip */}
+                      <div className="bg-muted/30 px-phi-3 sm:px-phi-4 py-phi-2 sm:py-phi-3 border-t border-border/50">
+                        <div className="flex items-start gap-phi-2">
+                          <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 text-primary mt-0.5 flex-shrink-0" />
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            These are AI-generated estimates. For precise nutritional information, 
+                            consult with your healthcare provider or a registered dietitian.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Footer tip */}
-                  <div className="bg-muted/30 px-phi-3 sm:px-phi-4 py-phi-2 sm:py-phi-3 border-t border-border/50">
-                    <div className="flex items-start gap-phi-2">
-                      <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 text-primary mt-0.5 flex-shrink-0" />
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        These are AI-generated estimates. For precise nutritional information, 
-                        consult with your healthcare provider or a registered dietitian.
-                      </p>
+                  {/* Right: Simple Summary */}
+                  <div className="lg:col-span-1">
+                    <div className="bg-muted/20 rounded-lg p-phi-4 h-full">
+                      <h4 className="text-sm font-semibold text-foreground mb-phi-3">Summary</h4>
+                      <div className="space-y-phi-2 text-xs text-muted-foreground/70 leading-relaxed">
+                        {analysis.split('\n').filter(line => line.trim().length > 30).slice(0, 5).map((line, idx) => (
+                          <p key={idx} className="border-l-2 border-muted-foreground/20 pl-phi-2">
+                            {line.trim()}
+                          </p>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
