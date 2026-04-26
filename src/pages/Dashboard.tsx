@@ -103,22 +103,9 @@ const Dashboard = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-phi-3 sm:px-phi-4 py-phi-3 sm:py-phi-5 space-y-phi-4 sm:space-y-phi-5">
-        {/* MAIN: Meal Analyzer (hero) */}
-        <section>
-          <div className="flex items-center gap-phi-2 mb-phi-3">
-            <Utensils className="h-5 w-5 text-primary" />
-            <h2 className="text-lg sm:text-xl font-bold">Record a Meal</h2>
-          </div>
-          <MealImageAnalyzer />
-        </section>
-
-        {/* MEAL HISTORY */}
-        <section>
-          <MealHistory />
-        </section>
-
-        {/* WEEKLY PROGRESS + TODAY'S SNAPSHOT */}
+        {/* HERO: Weekly Progress + Quick Stats */}
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-phi-3 sm:gap-phi-4">
+          {/* Weekly Progress (spans 2) */}
           <Card className="lg:col-span-2 p-phi-3 sm:p-phi-5 bg-gradient-to-br from-primary/5 to-accent">
             <div className="flex items-center gap-phi-2 sm:gap-phi-3 mb-phi-3">
               <div className="p-phi-2 bg-primary/10 rounded-lg">
@@ -152,6 +139,7 @@ const Dashboard = () => {
             </div>
           </Card>
 
+          {/* Today's Snapshot */}
           <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-phi-2 sm:gap-phi-3">
             <Card className="p-phi-3">
               <div className="flex items-center gap-phi-2 mb-phi-2">
@@ -198,6 +186,22 @@ const Dashboard = () => {
                 />
               </div>
             </Card>
+          </div>
+        </section>
+
+        {/* MEAL TRACKING: Analyzer + History side-by-side on desktop */}
+        <section>
+          <div className="flex items-center gap-phi-2 mb-phi-3">
+            <Utensils className="h-5 w-5 text-primary" />
+            <h2 className="text-lg sm:text-xl font-bold">Meal Tracking</h2>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-phi-3 sm:gap-phi-4">
+            <div className="lg:col-span-3">
+              <MealImageAnalyzer />
+            </div>
+            <div className="lg:col-span-2">
+              <MealHistory />
+            </div>
           </div>
         </section>
 
