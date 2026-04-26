@@ -35,17 +35,18 @@ const Dashboard = () => {
       const personalizedMetrics = generatePersonalizedMockMetrics(profile, []);
       const allMetrics = [...personalizedMetrics, ...nonMealMetrics];
       localStorage.setItem('health-metrics', JSON.stringify(allMetrics));
-      toast.success("Personalized demo data generated based on your profile");
     } else {
       const personalizedMetrics = generatePersonalizedMockMetrics(profile, nonMealMetrics);
       const veganMeals = personalizedMetrics.filter(m => m.type === 'meal');
       const allMetrics = [...veganMeals, ...nonMealMetrics];
       localStorage.setItem('health-metrics', JSON.stringify(allMetrics));
-      toast.success("Past meals updated to vegan with photos");
     }
 
     localStorage.setItem('demo-data-loaded', DEMO_VERSION);
-    setTimeout(() => window.location.reload(), 600);
+    // Defer reload until after paint to avoid mid-commit DOM teardown
+    requestAnimationFrame(() => {
+      setTimeout(() => window.location.reload(), 100);
+    });
   }, [profile]);
 
   const latestGlucose = metrics.find(m => m.type === "glucose");
