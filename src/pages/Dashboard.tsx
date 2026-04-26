@@ -190,7 +190,7 @@ const Dashboard = () => {
         </section>
 
         {/* MEAL TRACKING: Analyzer + History side-by-side on desktop */}
-        <section>
+        <section id="meal-tracking" className="scroll-mt-20">
           <div className="flex items-center gap-phi-2 mb-phi-3">
             <Utensils className="h-5 w-5 text-primary" />
             <h2 className="text-lg sm:text-xl font-bold">Meal Tracking</h2>
@@ -266,15 +266,31 @@ const Dashboard = () => {
         </section>
       </main>
 
-      {/* Floating AI Assistant */}
-      <Button
-        size="icon"
-        className="fixed bottom-phi-3 right-phi-3 sm:bottom-phi-4 sm:right-phi-4 h-12 w-12 sm:h-16 sm:w-16 rounded-full shadow-lg z-50"
-        onClick={() => setShowAssistant(true)}
-        aria-label="Open AI Assistant"
-      >
-        <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6" />
-      </Button>
+      {/* Floating Action Buttons */}
+      <div className="fixed bottom-phi-3 right-phi-3 sm:bottom-phi-4 sm:right-phi-4 z-50 flex items-center gap-phi-2">
+        <Button
+          size="lg"
+          variant="default"
+          className="h-12 sm:h-14 rounded-full shadow-lg pl-phi-2 pr-phi-3 gap-phi-2 bg-primary hover:bg-primary/90"
+          onClick={() => {
+            document.getElementById('meal-tracking')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }}
+          aria-label="Record meal with AI"
+        >
+          <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
+          <span className="text-sm sm:text-base font-semibold">Record Meal with AI</span>
+        </Button>
+
+        <Button
+          size="icon"
+          variant="outline"
+          className="h-12 w-12 sm:h-14 sm:w-14 rounded-full shadow-lg bg-background"
+          onClick={() => setShowAssistant(true)}
+          aria-label="Open AI Assistant"
+        >
+          <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6" />
+        </Button>
+      </div>
 
       {showAssistant && (
         <AIAssistant onClose={() => setShowAssistant(false)} />
