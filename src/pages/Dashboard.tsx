@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Activity, MessageCircle, Moon, Sun, TrendingUp, Utensils, Dumbbell, Download, Sparkles } from "lucide-react";
+import { Activity, MessageCircle, Moon, Sun, TrendingUp, Utensils, Dumbbell, Download, Sparkles, Camera } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useState, useEffect } from "react";
 import AIAssistant from "@/components/AIAssistant";
@@ -136,6 +136,43 @@ const Dashboard = () => {
                 <p className="text-xs text-muted-foreground mb-phi-1">Workouts</p>
                 <p className="text-xl sm:text-2xl font-bold">{weeklyStats.exerciseSessions}</p>
               </div>
+            </div>
+
+            {/* Bottom action row: quick metrics + camera shortcut */}
+            <div className="mt-phi-3 pt-phi-3 border-t border-border/50 flex items-center justify-between gap-phi-3">
+              <div className="flex items-center gap-phi-3 sm:gap-phi-4 flex-wrap min-w-0">
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Today's Meals</p>
+                  <p className="text-sm sm:text-base font-bold">
+                    {todayMeals.length} <span className="text-xs text-muted-foreground font-normal">· {todayMeals.reduce((sum, m) => sum + (m.mealDetails?.calories || 0), 0)} kcal</span>
+                  </p>
+                </div>
+                <div className="h-8 w-px bg-border/50" />
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Latest Glucose</p>
+                  <p className="text-sm sm:text-base font-bold">
+                    {latestGlucose ? Math.round(latestGlucose.value) : '--'} <span className="text-xs text-muted-foreground font-normal">mg/dL</span>
+                  </p>
+                </div>
+                <div className="h-8 w-px bg-border/50 hidden sm:block" />
+                <div className="min-w-0 hidden sm:block">
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Today's Steps</p>
+                  <p className="text-sm sm:text-base font-bold">
+                    {todaySteps ? Math.round(todaySteps.value).toLocaleString() : '0'}
+                  </p>
+                </div>
+              </div>
+
+              <Button
+                size="icon"
+                className="h-11 w-11 sm:h-12 sm:w-12 rounded-full shadow-md flex-shrink-0"
+                onClick={() => {
+                  document.getElementById('meal-tracking')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+                aria-label="Record meal with camera"
+              >
+                <Camera className="h-5 w-5 sm:h-6 sm:w-6" />
+              </Button>
             </div>
           </Card>
 
