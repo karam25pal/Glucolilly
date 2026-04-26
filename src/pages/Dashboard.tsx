@@ -148,7 +148,7 @@ const Dashboard = () => {
             </div>
 
             {/* Bottom action: Record Meal with AI shortcut */}
-            <div className="mt-phi-3 pt-phi-3 border-t border-border/50 flex items-center justify-end">
+            <div className="mt-phi-3 pt-phi-3 border-t border-border/50 flex items-center justify-center">
               <Button
                 size="lg"
                 className="h-12 rounded-full shadow-md pl-phi-3 pr-phi-3 gap-phi-2 bg-primary hover:bg-primary/90"

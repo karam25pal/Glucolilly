@@ -24,7 +24,7 @@ export const MealHistory = () => {
   const [selected, setSelected] = useState<HealthMetric | null>(null);
 
   const meals = useMemo(
-    () => metrics.filter((m) => m.type === "meal").slice(0, 50),
+    () => metrics.filter((m) => m.type === "meal" && !!m.mealDetails?.imageUrl).slice(0, 50),
     [metrics]
   );
 
