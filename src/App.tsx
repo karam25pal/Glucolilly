@@ -3,21 +3,17 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { UserProvider } from "@/contexts/UserContext";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import Splash from "./pages/Splash";
-import VoiceNavigationTimer from "./pages/VoiceNavigationTimer";
-import AccessibilitySelection from "./pages/AccessibilitySelection";
 import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
 import Diet from "./pages/Diet";
 import Exercise from "./pages/Exercise";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
-import AccessibilitySettings from "./pages/AccessibilitySettings";
 import NotFound from "./pages/NotFound";
 import GDPRConsent from "./pages/GDPRConsent";
 import { useEffect, useState } from "react";
@@ -68,7 +64,7 @@ const ConsentGuard = ({ children }: { children: React.ReactNode }) => {
 
 const LayoutWithSidebar = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
-  const noSidebarRoutes = ["/", "/voice-setup", "/accessibility", "/onboarding", "/gdpr-consent"];
+  const noSidebarRoutes = ["/", "/onboarding", "/gdpr-consent"];
   const showSidebar = !noSidebarRoutes.includes(location.pathname);
 
   if (!showSidebar) {
@@ -93,35 +89,30 @@ const LayoutWithSidebar = ({ children }: { children: React.ReactNode }) => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
-      <AccessibilityProvider>
-        <UserProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <ConsentGuard>
-                <LayoutWithSidebar>
-                  <Routes>
-                    <Route path="/gdpr-consent" element={<GDPRConsent />} />
-                    <Route path="/" element={<Splash />} index />
-                    <Route path="/voice-setup" element={<VoiceNavigationTimer />} />
-                    <Route path="/accessibility" element={<AccessibilitySelection />} />
-                    <Route path="/onboarding" element={<Onboarding />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/diet" element={<Diet />} />
-                    <Route path="/exercise" element={<Exercise />} />
-                    <Route path="/profile" element={<Profile />} />
-                    <Route path="/settings" element={<Settings />} />
-                    <Route path="/accessibility-settings" element={<AccessibilitySettings />} />
-                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </LayoutWithSidebar>
-              </ConsentGuard>
-            </BrowserRouter>
-          </TooltipProvider>
-        </UserProvider>
-      </AccessibilityProvider>
+      <UserProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <ConsentGuard>
+              <LayoutWithSidebar>
+                <Routes>
+                  <Route path="/gdpr-consent" element={<GDPRConsent />} />
+                  <Route path="/" element={<Splash />} index />
+                  <Route path="/onboarding" element={<Onboarding />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/diet" element={<Diet />} />
+                  <Route path="/exercise" element={<Exercise />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/settings" element={<Settings />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </LayoutWithSidebar>
+            </ConsentGuard>
+          </BrowserRouter>
+        </TooltipProvider>
+      </UserProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );
