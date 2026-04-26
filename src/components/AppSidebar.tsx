@@ -17,7 +17,6 @@ import {
   Home,
   Settings,
   User,
-  Eye,
   PhoneCall,
   Utensils,
   Dumbbell,
@@ -61,7 +60,6 @@ export function AppSidebar() {
   const settingsItems = [
     { title: "Profile", url: "/profile", icon: User },
     { title: "Settings", url: "/settings", icon: Settings },
-    { title: "Accessibility", url: "/accessibility-settings", icon: Eye },
   ];
 
   const isActive = (path: string) => location.pathname === path;
