@@ -19,11 +19,16 @@ const Dashboard = () => {
   const [showAssistant, setShowAssistant] = useState(false);
   const navigate = useNavigate();
 
-  // Load demo data if no metrics exist (only once)
+  // Load demo data if no metrics exist (re-seeds for new vegan meals)
   useEffect(() => {
+    const DEMO_VERSION = 'v2-vegan';
     const hasLoadedDemo = localStorage.getItem('demo-data-loaded');
-    if (metrics.length === 0 && !hasLoadedDemo && profile) {
-      const personalizedMetrics = generatePersonalizedMockMetrics(profile, metrics);
+    if (profile && hasLoadedDemo !== DEMO_VERSION) {
+      // Clear old non-vegan meals to re-seed with vegan ones
+      const nonMealMetrics = metrics.filter(m => m.type !== 'meal');
+      localStorage.setItem('health-metrics', JSON.stringify(nonMealMetrics));
+
+      const personalizedMetrics = generatePersonalizedMockMetrics(profile, nonMealMetrics);
       personalizedMetrics.forEach(metric => {
         addMetric({
           type: metric.type,
@@ -34,8 +39,10 @@ const Dashboard = () => {
           exerciseDetails: metric.exerciseDetails,
         });
       });
-      localStorage.setItem('demo-data-loaded', 'true');
-      toast.success("Personalized demo data generated based on your profile");
+      localStorage.setItem('demo-data-loaded', DEMO_VERSION);
+      if (!hasLoadedDemo) {
+        toast.success("Personalized demo data generated based on your profile");
+      }
     }
   }, [profile]);
 
