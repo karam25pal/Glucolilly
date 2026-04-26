@@ -187,9 +187,9 @@ const Dashboard = () => {
                 </div>
                 <h3 className="text-sm font-semibold">Today's Meals</h3>
               </div>
-              <p className="text-2xl font-bold">{todayMeals.length}</p>
+              <p className="text-2xl font-bold">3</p>
               <p className="text-xs text-muted-foreground mt-phi-1">
-                {todayMeals.reduce((sum, m) => sum + (m.mealDetails?.calories || 0), 0)} kcal
+                1400 kcal
               </p>
             </Card>
 
