@@ -13,6 +13,11 @@ export interface HealthMetric {
     name: string;
     carbs?: number;
     calories?: number;
+    protein?: number;
+    fiber?: number;
+    impact?: "low" | "moderate" | "high";
+    imageUrl?: string;
+    analysis?: string;
   };
   exerciseDetails?: {
     activity: string;

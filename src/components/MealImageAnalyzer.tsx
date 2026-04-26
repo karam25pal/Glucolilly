@@ -18,6 +18,8 @@ export const MealImageAnalyzer = () => {
     carbs?: number;
     protein?: number;
     calories?: number;
+    fiber?: number;
+    impact?: "low" | "moderate" | "high";
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -73,14 +75,25 @@ export const MealImageAnalyzer = () => {
         // Extract meal data from analysis
         const carbsMatch = cleanedAnalysis.match(/carb[s]?[:\s]+(\d+)[\s]*g/i);
         const proteinMatch = cleanedAnalysis.match(/protein[:\s]+(\d+)[\s]*g/i);
+        const fiberMatch = cleanedAnalysis.match(/fiber[:\s]+(\d+)[\s]*g/i);
         const caloriesMatch = cleanedAnalysis.match(/calor[iy]+[es]*[:\s]+(\d+)/i);
         const mealNameMatch = cleanedAnalysis.match(/^([^.!?\n]+)/);
-        
+
+        const lower = cleanedAnalysis.toLowerCase();
+        const impact: "low" | "moderate" | "high" =
+          lower.includes("high") && lower.includes("sugar")
+            ? "high"
+            : lower.includes("low")
+              ? "low"
+              : "moderate";
+
         setMealData({
           name: mealNameMatch?.[1]?.trim() || "Analyzed Meal",
           carbs: carbsMatch ? parseInt(carbsMatch[1]) : undefined,
           protein: proteinMatch ? parseInt(proteinMatch[1]) : undefined,
           calories: caloriesMatch ? parseInt(caloriesMatch[1]) : undefined,
+          fiber: fiberMatch ? parseInt(fiberMatch[1]) : undefined,
+          impact,
         });
         
         toast.success("Meal analyzed successfully!");
@@ -106,12 +119,18 @@ export const MealImageAnalyzer = () => {
         name: mealData.name,
         carbs: mealData.carbs,
         calories: mealData.calories,
+        protein: mealData.protein,
+        fiber: mealData.fiber,
+        impact: mealData.impact,
+        imageUrl: selectedImage || undefined,
+        analysis: analysis || undefined,
       },
       notes: "Logged from AI Meal Analyzer",
     });
 
-    toast.success("Meal saved to your health metrics!");
-  }, [mealData, addMetric]);
+    toast.success("Meal saved to your history!");
+    handleReset();
+  }, [mealData, addMetric, selectedImage, analysis]);
 
   const handleReset = () => {
     setSelectedImage(null);
