@@ -19,31 +19,33 @@ const Dashboard = () => {
   const [showAssistant, setShowAssistant] = useState(false);
   const navigate = useNavigate();
 
-  // Load demo data if no metrics exist (re-seeds for new vegan meals)
+  // Load / refresh demo data (re-seeds when migrating to vegan meals)
   useEffect(() => {
     const DEMO_VERSION = 'v2-vegan';
     const hasLoadedDemo = localStorage.getItem('demo-data-loaded');
-    if (profile && hasLoadedDemo !== DEMO_VERSION) {
-      // Clear old non-vegan meals to re-seed with vegan ones
-      const nonMealMetrics = metrics.filter(m => m.type !== 'meal');
-      localStorage.setItem('health-metrics', JSON.stringify(nonMealMetrics));
 
+    if (!profile || hasLoadedDemo === DEMO_VERSION) return;
+
+    const stored = localStorage.getItem('health-metrics');
+    const existing: typeof metrics = stored ? JSON.parse(stored) : [];
+    const nonMealMetrics = existing.filter(m => m.type !== 'meal');
+
+    const isFirstLoad = !hasLoadedDemo;
+    if (isFirstLoad) {
+      const personalizedMetrics = generatePersonalizedMockMetrics(profile, []);
+      const allMetrics = [...personalizedMetrics, ...nonMealMetrics];
+      localStorage.setItem('health-metrics', JSON.stringify(allMetrics));
+      toast.success("Personalized demo data generated based on your profile");
+    } else {
       const personalizedMetrics = generatePersonalizedMockMetrics(profile, nonMealMetrics);
-      personalizedMetrics.forEach(metric => {
-        addMetric({
-          type: metric.type,
-          value: metric.value,
-          unit: metric.unit,
-          notes: metric.notes,
-          mealDetails: metric.mealDetails,
-          exerciseDetails: metric.exerciseDetails,
-        });
-      });
-      localStorage.setItem('demo-data-loaded', DEMO_VERSION);
-      if (!hasLoadedDemo) {
-        toast.success("Personalized demo data generated based on your profile");
-      }
+      const veganMeals = personalizedMetrics.filter(m => m.type === 'meal');
+      const allMetrics = [...veganMeals, ...nonMealMetrics];
+      localStorage.setItem('health-metrics', JSON.stringify(allMetrics));
+      toast.success("Past meals updated to vegan with photos");
     }
+
+    localStorage.setItem('demo-data-loaded', DEMO_VERSION);
+    setTimeout(() => window.location.reload(), 600);
   }, [profile]);
 
   const latestGlucose = metrics.find(m => m.type === "glucose");
