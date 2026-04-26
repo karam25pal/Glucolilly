@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import AIAssistant from "@/components/AIAssistant";
 import { useUser } from "@/contexts/UserContext";
 import { MetricsInput } from "@/components/MetricsInput";
+import { MealImageAnalyzer } from "@/components/MealImageAnalyzer";
 import { DiabetesReportGenerator } from "@/components/DiabetesReportGenerator";
 import { useNavigate } from "react-router-dom";
 import { generatePersonalizedMockMetrics } from "@/utils/mockData";
@@ -193,6 +194,11 @@ const Dashboard = () => {
             </div>
             <p className="text-xs sm:text-sm text-muted-foreground mt-phi-1">Goal: 10,000 steps</p>
           </Card>
+        </section>
+
+        {/* Record a Meal */}
+        <section className="mb-phi-3 sm:mb-phi-5">
+          <MealImageAnalyzer />
         </section>
 
         {/* Metrics Input */}
