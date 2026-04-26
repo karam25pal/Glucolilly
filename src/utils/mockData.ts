@@ -1,4 +1,91 @@
 import { HealthMetric, UserProfile } from "@/contexts/UserContext";
+import buddhaBowlImg from "@/assets/meal-buddha-bowl.jpg";
+import oatmealImg from "@/assets/meal-oatmeal.jpg";
+import lentilSoupImg from "@/assets/meal-lentil-soup.jpg";
+import tofuStirfryImg from "@/assets/meal-tofu-stirfry.jpg";
+import chickpeaSaladImg from "@/assets/meal-chickpea-salad.jpg";
+import avocadoToastImg from "@/assets/meal-avocado-toast.jpg";
+
+type VeganMeal = {
+  name: string;
+  image: string;
+  calories: number;
+  carbs: number;
+  protein: number;
+  fiber: number;
+  impact: "low" | "moderate" | "high";
+  analysis: string;
+};
+
+const VEGAN_MEALS: VeganMeal[] = [
+  {
+    name: "Vegan Buddha Bowl",
+    image: buddhaBowlImg,
+    calories: 480,
+    carbs: 55,
+    protein: 18,
+    fiber: 14,
+    impact: "low",
+    analysis:
+      "A balanced vegan Buddha bowl with quinoa, chickpeas, avocado, kale and tahini. High in fiber and plant protein, with a low glycemic load — excellent for steady glucose response.",
+  },
+  {
+    name: "Vegan Oatmeal with Berries",
+    image: oatmealImg,
+    calories: 340,
+    carbs: 58,
+    protein: 9,
+    fiber: 9,
+    impact: "moderate",
+    analysis:
+      "Rolled oats with blueberries, banana and almonds. Whole-grain carbohydrates with soluble fiber help slow glucose absorption — a smart breakfast choice.",
+  },
+  {
+    name: "Lentil Vegetable Soup",
+    image: lentilSoupImg,
+    calories: 320,
+    carbs: 42,
+    protein: 18,
+    fiber: 12,
+    impact: "low",
+    analysis:
+      "Hearty lentil soup with carrots, celery and spinach. Lentils provide slow-release carbs and plant protein — gentle on blood sugar and very filling.",
+  },
+  {
+    name: "Tofu Vegetable Stir-Fry",
+    image: tofuStirfryImg,
+    calories: 420,
+    carbs: 45,
+    protein: 22,
+    fiber: 8,
+    impact: "low",
+    analysis:
+      "Tofu stir-fry with broccoli, peppers and brown rice. Lean plant protein and non-starchy vegetables make this a diabetes-friendly choice.",
+  },
+  {
+    name: "Chickpea & Avocado Salad",
+    image: chickpeaSaladImg,
+    calories: 360,
+    carbs: 32,
+    protein: 14,
+    fiber: 11,
+    impact: "low",
+    analysis:
+      "Fresh greens with chickpeas, avocado and lemon vinaigrette. Healthy fats and fiber help blunt post-meal glucose spikes.",
+  },
+  {
+    name: "Avocado Toast on Whole Grain",
+    image: avocadoToastImg,
+    calories: 290,
+    carbs: 30,
+    protein: 8,
+    fiber: 9,
+    impact: "moderate",
+    analysis:
+      "Whole-grain toast with mashed avocado and cherry tomatoes. Good fiber and healthy fats — pair with extra protein for the steadiest glucose response.",
+  },
+];
+
 
 export const generatePersonalizedMockMetrics = (
   profile: UserProfile | null,
@@ -99,48 +186,32 @@ export const generatePersonalizedMockMetrics = (
     });
   }
 
-  // Generate meals based on user's preferred foods or defaults
-  const defaultMeals = [
-    "Oatmeal with berries",
-    "Grilled chicken salad",
-    "Brown rice with vegetables",
-    "Greek yogurt with nuts",
-    "Salmon with quinoa",
-    "Lentil soup",
-    "Scrambled eggs with spinach",
-    "Turkey wrap with vegetables",
-    "Stir-fried tofu",
-  ];
-
-  const mealPool = userMeals.length > 3 
-    ? [...new Set([...userMeals, ...defaultMeals])] as string[]
-    : defaultMeals;
-
-  // Calorie baseline based on weight and height
-  const baseCalories = profile?.weight && profile?.height
-    ? Math.round((profile.weight * 10 + profile.height * 6.25 - profile.age * 5 + 5) / 3)
-    : 450;
-
+  // Generate vegan meal history with photos and full nutrition
   for (let day = 0; day < 7; day++) {
     const date = new Date(now);
     date.setDate(date.getDate() - day);
-    
+
     [8, 13, 19].forEach((hour, idx) => {
       const mealDate = new Date(date);
       mealDate.setHours(hour, 0, 0, 0);
-      const mealName = mealPool[Math.floor(Math.random() * mealPool.length)];
-      const calories = baseCalories + (Math.random() * 200 - 100);
-      
+      const meal = VEGAN_MEALS[(day * 3 + idx) % VEGAN_MEALS.length];
+
       metrics.push({
         id: `meal-${day}-${idx}-${Date.now()}`,
         timestamp: mealDate.toISOString(),
         type: "meal",
-        value: calories,
+        value: meal.calories,
         unit: "kcal",
+        notes: "Vegan meal logged",
         mealDetails: {
-          name: mealName,
-          carbs: Math.round(calories * 0.15 + Math.random() * 30),
-          calories: Math.round(calories),
+          name: meal.name,
+          calories: meal.calories,
+          carbs: meal.carbs,
+          protein: meal.protein,
+          fiber: meal.fiber,
+          impact: meal.impact,
+          imageUrl: meal.image,
+          analysis: meal.analysis,
         },
       });
     });

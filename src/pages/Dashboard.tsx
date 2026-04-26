@@ -19,24 +19,33 @@ const Dashboard = () => {
   const [showAssistant, setShowAssistant] = useState(false);
   const navigate = useNavigate();
 
-  // Load demo data if no metrics exist (only once)
+  // Load / refresh demo data (re-seeds when migrating to vegan meals)
   useEffect(() => {
+    const DEMO_VERSION = 'v2-vegan';
     const hasLoadedDemo = localStorage.getItem('demo-data-loaded');
-    if (metrics.length === 0 && !hasLoadedDemo && profile) {
-      const personalizedMetrics = generatePersonalizedMockMetrics(profile, metrics);
-      personalizedMetrics.forEach(metric => {
-        addMetric({
-          type: metric.type,
-          value: metric.value,
-          unit: metric.unit,
-          notes: metric.notes,
-          mealDetails: metric.mealDetails,
-          exerciseDetails: metric.exerciseDetails,
-        });
-      });
-      localStorage.setItem('demo-data-loaded', 'true');
+
+    if (!profile || hasLoadedDemo === DEMO_VERSION) return;
+
+    const stored = localStorage.getItem('health-metrics');
+    const existing: typeof metrics = stored ? JSON.parse(stored) : [];
+    const nonMealMetrics = existing.filter(m => m.type !== 'meal');
+
+    const isFirstLoad = !hasLoadedDemo;
+    if (isFirstLoad) {
+      const personalizedMetrics = generatePersonalizedMockMetrics(profile, []);
+      const allMetrics = [...personalizedMetrics, ...nonMealMetrics];
+      localStorage.setItem('health-metrics', JSON.stringify(allMetrics));
       toast.success("Personalized demo data generated based on your profile");
+    } else {
+      const personalizedMetrics = generatePersonalizedMockMetrics(profile, nonMealMetrics);
+      const veganMeals = personalizedMetrics.filter(m => m.type === 'meal');
+      const allMetrics = [...veganMeals, ...nonMealMetrics];
+      localStorage.setItem('health-metrics', JSON.stringify(allMetrics));
+      toast.success("Past meals updated to vegan with photos");
     }
+
+    localStorage.setItem('demo-data-loaded', DEMO_VERSION);
+    setTimeout(() => window.location.reload(), 600);
   }, [profile]);
 
   const latestGlucose = metrics.find(m => m.type === "glucose");
@@ -138,40 +147,18 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Bottom action row: quick metrics + camera shortcut */}
-            <div className="mt-phi-3 pt-phi-3 border-t border-border/50 flex items-center justify-between gap-phi-3">
-              <div className="flex items-center gap-phi-3 sm:gap-phi-4 flex-wrap min-w-0">
-                <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Today's Meals</p>
-                  <p className="text-sm sm:text-base font-bold">
-                    {todayMeals.length} <span className="text-xs text-muted-foreground font-normal">· {todayMeals.reduce((sum, m) => sum + (m.mealDetails?.calories || 0), 0)} kcal</span>
-                  </p>
-                </div>
-                <div className="h-8 w-px bg-border/50" />
-                <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Latest Glucose</p>
-                  <p className="text-sm sm:text-base font-bold">
-                    {latestGlucose ? Math.round(latestGlucose.value) : '--'} <span className="text-xs text-muted-foreground font-normal">mg/dL</span>
-                  </p>
-                </div>
-                <div className="h-8 w-px bg-border/50 hidden sm:block" />
-                <div className="min-w-0 hidden sm:block">
-                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Today's Steps</p>
-                  <p className="text-sm sm:text-base font-bold">
-                    {todaySteps ? Math.round(todaySteps.value).toLocaleString() : '0'}
-                  </p>
-                </div>
-              </div>
-
+            {/* Bottom action: Record Meal with AI shortcut */}
+            <div className="mt-phi-3 pt-phi-3 border-t border-border/50 flex items-center justify-end">
               <Button
-                size="icon"
-                className="h-11 w-11 sm:h-12 sm:w-12 rounded-full shadow-md flex-shrink-0"
+                size="lg"
+                className="h-12 rounded-full shadow-md pl-phi-3 pr-phi-3 gap-phi-2 bg-primary hover:bg-primary/90"
                 onClick={() => {
                   document.getElementById('meal-tracking')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }}
-                aria-label="Record meal with camera"
+                aria-label="Record meal with AI"
               >
-                <Camera className="h-5 w-5 sm:h-6 sm:w-6" />
+                <Camera className="h-5 w-5" />
+                <span className="text-sm sm:text-base font-semibold">Record Meal with AI</span>
               </Button>
             </div>
           </Card>
@@ -303,31 +290,15 @@ const Dashboard = () => {
         </section>
       </main>
 
-      {/* Floating Action Buttons */}
-      <div className="fixed bottom-phi-3 right-phi-3 sm:bottom-phi-4 sm:right-phi-4 z-50 flex items-center gap-phi-2">
-        <Button
-          size="lg"
-          variant="default"
-          className="h-12 sm:h-14 rounded-full shadow-lg pl-phi-2 pr-phi-3 gap-phi-2 bg-primary hover:bg-primary/90"
-          onClick={() => {
-            document.getElementById('meal-tracking')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }}
-          aria-label="Record meal with AI"
-        >
-          <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
-          <span className="text-sm sm:text-base font-semibold">Record Meal with AI</span>
-        </Button>
-
-        <Button
-          size="icon"
-          variant="outline"
-          className="h-12 w-12 sm:h-14 sm:w-14 rounded-full shadow-lg bg-background"
-          onClick={() => setShowAssistant(true)}
-          aria-label="Open AI Assistant"
-        >
-          <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6" />
-        </Button>
-      </div>
+      {/* Floating AI Assistant */}
+      <Button
+        size="icon"
+        className="fixed bottom-phi-3 right-phi-3 sm:bottom-phi-4 sm:right-phi-4 h-12 w-12 sm:h-14 sm:w-14 rounded-full shadow-lg z-50"
+        onClick={() => setShowAssistant(true)}
+        aria-label="Open AI Assistant"
+      >
+        <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6" />
+      </Button>
 
       {showAssistant && (
         <AIAssistant onClose={() => setShowAssistant(false)} />
